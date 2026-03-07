@@ -134,7 +134,7 @@ Ejemplo: `header_sticky - Cabecera fija al hacer scroll`
 ```bat
 crear-version.bat 1.1.0 nueva_funcionalidad
 ```
-El script realiza automáticamente los pasos 1-6.
+El script guía paso a paso: backup BD → revisión specs → changelog → VERSION → git push.
 
 **Opción B — Manual (cuando Claude genera la versión):**
 
@@ -146,19 +146,22 @@ REM backup\backup.bat all v1.1.0
 ```
 
 #### Paso 2: Revisar y actualizar especificaciones
-Antes de cerrar la versión, verificar que las specs reflejan el estado actual:
-- `specs/arquitectura.md` — si hubo cambios de stack o estructura
-- `specs/backend.md` — si hubo cambios en PHP, BD o endpoints
-- `specs/admin.md` — si hubo cambios en el panel
-- `specs/cookies-rgpd.md` — si hubo cambios en el sistema de cookies
-- `specs/paginas.md` — si se añadieron o modificaron páginas
-- `specs/deploy.md` — si hubo cambios en el proceso de deploy o versionado
+Antes de crear el changelog, actualizar los ficheros de specs que correspondan:
+
+| Fichero | Actualizar si... |
+|---------|-----------------|
+| `specs/arquitectura.md` | Cambió el stack o la estructura del proyecto |
+| `specs/backend.md` | Cambió PHP, BD, tablas o endpoints |
+| `specs/admin.md` | Cambió el panel de administración |
+| `specs/cookies-rgpd.md` | Cambió el sistema de cookies |
+| `specs/paginas.md` | Se añadieron o modificaron páginas |
+| `specs/deploy.md` | Cambió el proceso de deploy, entornos o versionado |
 
 #### Paso 3: Crear carpeta de versión y changelog
 ```
 versiones/
   v1.1.0-descripcion_breve/
-    changelog.md     ← Fecha, resumen, lista de cambios por fichero
+    changelog.md     ← Fecha, resumen, cambios por fichero, specs actualizadas
 ```
 
 #### Paso 4: Actualizar fichero VERSION

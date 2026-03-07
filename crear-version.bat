@@ -8,9 +8,9 @@ REM   crear-version.bat 1.0.1 correccion_formulario
 REM
 REM Pasos que realiza:
 REM   1. Backup de base de datos (TEST)
-REM   2. Crea carpeta en versiones/vX.Y.Z-descripcion/
-REM   3. Genera plantilla de changelog.md
-REM   4. Abre el changelog para edicion
+REM   2. Revision y actualizacion de specs
+REM   3. Crea carpeta en versiones/vX.Y.Z-descripcion/
+REM   4. Genera plantilla de changelog.md y la abre para edicion
 REM   5. Actualiza fichero VERSION
 REM   6. Hace git commit + push
 REM ================================================================
@@ -63,7 +63,7 @@ if exist "%VERSION_DIR%" (
 )
 
 REM --- PASO 1: Backup de base de datos ---
-echo %YELLOW%[1/5] Backup de base de datos (TEST)...%RESET%
+echo %YELLOW%[1/6] Backup de base de datos (TEST)...%RESET%
 php "%~dp0backup\backup-database.php" test v%VERSION%
 if errorlevel 1 (
     echo %RED%ERROR en el backup. Abortando.%RESET%
@@ -72,12 +72,32 @@ if errorlevel 1 (
 echo %GREEN%Backup completado.%RESET%
 echo.
 
-REM --- PASO 2: Crear carpeta de version ---
-echo %YELLOW%[2/5] Creando carpeta de version...%RESET%
+REM --- PASO 2: Revision de specs ---
+echo %YELLOW%[2/6] Revision de especificaciones tecnicas...%RESET%
+echo.
+echo  Revisa y actualiza los ficheros de specs que correspondan:
+echo.
+echo   specs\arquitectura.md  - Si cambiaron stack o estructura
+echo   specs\backend.md       - Si cambiaron PHP, BD o endpoints
+echo   specs\admin.md         - Si cambio el panel de administracion
+echo   specs\cookies-rgpd.md  - Si cambio el sistema de cookies
+echo   specs\paginas.md       - Si se anadieron o modificaron paginas
+echo   specs\deploy.md        - Si cambio el proceso de deploy o versionado
+echo.
+echo  Abriendo carpeta specs...
+explorer "%~dp0specs"
+echo.
+echo  Edita los specs necesarios, GUARDALOS y cuando termines
+echo  pulsa cualquier tecla para continuar.
+echo.
+pause
+
+REM --- PASO 3: Crear carpeta de version ---
+echo %YELLOW%[3/6] Creando carpeta de version...%RESET%
 mkdir "%VERSION_DIR%"
 
-REM --- PASO 3: Generar plantilla de changelog ---
-echo %YELLOW%[3/5] Generando plantilla de changelog...%RESET%
+REM --- PASO 4: Generar plantilla de changelog y abrir para edicion ---
+echo %YELLOW%[4/6] Generando changelog...%RESET%
 
 (
 echo # v%VERSION% — %DESC%
@@ -94,8 +114,8 @@ echo.
 echo ### 2. Backend
 echo - `php/...` —
 echo.
-echo ### 3. Especificaciones
-echo - `specs/...` —
+echo ### 3. Especificaciones actualizadas
+echo - `specs/...` — descripcion de que se actualizo
 echo.
 echo ## Notas de actualizacion
 echo - ^< instrucciones especiales si aplica ^>
@@ -103,17 +123,14 @@ echo - ^< instrucciones especiales si aplica ^>
 
 echo %GREEN%Plantilla creada en: versiones\%VERSION_TAG%\changelog.md%RESET%
 echo.
-
-REM --- PASO 4: Abrir changelog para edicion ---
-echo %YELLOW%[4/5] Abriendo changelog para edicion...%RESET%
-echo     Edita el fichero, GUARDALO y CIERRA el editor.
-echo     Cuando termines, pulsa cualquier tecla para continuar.
+echo  Edita el changelog, GUARDALO y CIERRA el editor.
+echo  Cuando termines, pulsa cualquier tecla para continuar.
 echo.
 start /wait notepad.exe "%CHANGELOG%"
 pause
 
 REM --- PASO 5: Actualizar fichero VERSION ---
-echo %YELLOW%[5/5] Actualizando VERSION...%RESET%
+echo %YELLOW%[5/6] Actualizando VERSION...%RESET%
 echo %VERSION%> "%~dp0VERSION"
 echo %GREEN%VERSION actualizado a %VERSION%%RESET%
 echo.
@@ -122,7 +139,7 @@ REM --- PASO 6: Git commit y push ---
 echo %YELLOW%[6/6] Commit y push a GitHub...%RESET%
 cd /d "%~dp0"
 git add -A
-git commit -m "version %VERSION_TAG% - nueva version"
+git commit -m "version %VERSION_TAG%"
 git push
 if errorlevel 1 (
     echo %YELLOW%AVISO: Push fallido. Verifica la conexion con GitHub.%RESET%
@@ -138,6 +155,7 @@ echo %GREEN%============================================%RESET%
 echo.
 echo  Resumen:
 echo   - Backup BD:   backup\test\v%VERSION%\
+echo   - Specs:       specs\ (actualizadas manualmente)
 echo   - Changelog:   versiones\%VERSION_TAG%\changelog.md
 echo   - VERSION:     %VERSION%
 echo   - Git commit:  version %VERSION_TAG%
