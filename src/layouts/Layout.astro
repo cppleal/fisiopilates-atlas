@@ -1,0 +1,40 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'Centro de Fisioterapia y Pilates Atlas en Carabanchel Alto, Madrid. Masajes, rehabilitación y clases de Pilates con fisioterapeutas expertos.' } = Astro.props;
+const currentPath = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="keywords" content="fisioterapia, pilates, rehabilitación, masajes, Carabanchel, Madrid, Atlas" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <title>{title} | Fisiopilates Atlas</title>
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={`${title} | Fisiopilates Atlas`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_ES" />
+  </head>
+  <body class="min-h-screen flex flex-col bg-bg-white">
+    <Header currentPath={currentPath} />
+    <main class="flex-1">
+      <slot />
+    </main>
+    <Footer />
+    <link rel="stylesheet" href="/css/cookie-consent.css">
+    <script src="/js/cookie-consent.js" defer></script>
+  </body>
+</html>

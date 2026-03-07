@@ -1,0 +1,128 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Hero from '../components/Hero.astro';
+import SectionTitle from '../components/SectionTitle.astro';
+---
+
+<Layout
+  title="Fisioterapia"
+  description="Servicios de fisioterapia en Carabanchel Alto, Madrid. Masajes, rehabilitación, tratamiento de contracturas, esguinces, roturas de fibras y puntos gatillo."
+>
+  <Hero
+    title="Fisioterapia"
+    subtitle="Masajes, rehabilitación y tratamiento de lesiones con atención personalizada y profesional."
+    backgroundImage="/images/fisio_atlas_02.jpg"
+    compact
+  />
+
+  <!-- Intro -->
+  <section class="py-12 sm:py-16 md:py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-text-dark mb-4">
+            Centro especializado en Fisioterapia y rehabilitación
+          </h2>
+          <p class="text-text-gray leading-relaxed mb-4">
+            En Fisiopilates Atlas estamos especializados en fisioterapia, masajes y rehabilitación. Nuestro centro está situado en el barrio de Carabanchel Alto, en Madrid, y ofrecemos atención personalizada para ayudarte a recuperar tu bienestar y calidad de vida.
+          </p>
+          <p class="text-text-gray leading-relaxed mb-4">
+            Las sesiones de fisioterapia tienen una duración aproximada de una hora y están adaptadas a las necesidades individuales de cada paciente. Trabajamos con un enfoque integral, combinando diferentes técnicas para conseguir los mejores resultados en el menor tiempo posible.
+          </p>
+          <p class="text-text-gray leading-relaxed mb-6">
+            Si no puedes desplazarte al centro, también realizamos <strong class="text-text-dark">tratamientos a domicilio</strong>, por el mismo precio más el plus de desplazamiento según la distancia.
+          </p>
+          <a
+            href="/contacto"
+            class="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-light transition-all duration-300 shadow-card hover:shadow-card-hover"
+          >
+            Pedir cita
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+        </div>
+        <div class="rounded-2xl overflow-hidden shadow-card">
+          <img
+            src="/images/fisio_masaje.webp"
+            alt="Sesión de fisioterapia y masaje en Fisiopilates Atlas"
+            class="w-full h-full object-cover max-h-96 lg:max-h-none"
+            loading="lazy"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tratamientos -->
+  <section class="py-12 sm:py-16 md:py-20 bg-bg-light">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <SectionTitle
+        title="Patologías que tratamos"
+        subtitle="Abordamos las lesiones y dolencias más habituales del aparato locomotor con técnicas contrastadas."
+      />
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {[
+          {
+            title: 'Contracturas musculares',
+            desc: 'Tratamiento de tensiones y contracturas mediante masoterapia, termoterapia y técnicas manuales específicas.',
+            icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z'
+          },
+          {
+            title: 'Sobrecargas deportivas',
+            desc: 'Recuperación de lesiones por sobrecarga en deportistas, con programas adaptados a la actividad física del paciente.',
+            icon: 'M13 10V3L4 14h7v7l9-11h-7z'
+          },
+          {
+            title: 'Esguinces',
+            desc: 'Tratamiento completo de esguinces de tobillo, rodilla y otras articulaciones para una recuperación funcional completa.',
+            icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'
+          },
+          {
+            title: 'Roturas de fibras',
+            desc: 'Protocolo de rehabilitación para roturas musculares parciales o totales, desde la fase aguda hasta la vuelta a la actividad.',
+            icon: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+          },
+          {
+            title: 'Puntos gatillo',
+            desc: 'Tratamiento de trigger points mediante punción seca o técnicas manuales para aliviar el dolor referido y restaurar la función.',
+            icon: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z'
+          },
+          {
+            title: 'Rehabilitación general',
+            desc: 'Programas de rehabilitación para recuperar la movilidad y funcionalidad tras cirugías, traumatismos o enfermedades.',
+            icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
+          },
+        ].map(item => (
+          <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-card border border-border">
+            <div class="w-11 h-11 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+              <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={item.icon} />
+              </svg>
+            </div>
+            <h3 class="font-bold text-text-dark mb-2">{item.title}</h3>
+            <p class="text-text-gray text-sm leading-relaxed">{item.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-12 sm:py-16 md:py-20 bg-primary text-white text-center">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h2 class="text-2xl sm:text-3xl font-extrabold mb-4">¿Tienes alguna lesión?</h2>
+      <p class="text-teal-100 text-base sm:text-lg mb-8 leading-relaxed">
+        Contacta con nosotros y te ayudaremos a recuperarte cuanto antes. También puedes consultar nuestras tarifas.
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="/contacto" class="inline-flex items-center gap-2 bg-white text-primary px-6 py-3 sm:px-8 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-teal-50 transition-all duration-300 shadow-lg">
+          Pedir cita
+        </a>
+        <a href="/precios" class="inline-flex items-center gap-2 bg-white/15 text-white border border-white/30 px-6 py-3 sm:px-8 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-white/25 transition-all duration-300">
+          Ver tarifas
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>

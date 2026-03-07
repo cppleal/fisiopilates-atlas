@@ -1,0 +1,25 @@
+{
+  "name": "fisiopilates-atlas",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "deploy": "npm run build && node scripts/deploy.mjs",
+    "deploy:prod": "npm run build && node scripts/deploy.mjs prod"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.2.1",
+    "astro": "^5.17.1",
+    "basic-ftp": "^5.2.0",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.3.1",
+    "ssh2-sftp-client": "^12.0.1",
+    "tailwindcss": "^4.2.1"
+  },
+  "devDependencies": {
+    "mysql2": "^3.18.2"
+  }
+}

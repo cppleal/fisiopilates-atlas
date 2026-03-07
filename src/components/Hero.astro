@@ -1,0 +1,87 @@
+---
+interface Props {
+  title: string;
+  subtitle?: string;
+  ctaText?: string;
+  ctaHref?: string;
+  ctaSecondaryText?: string;
+  ctaSecondaryHref?: string;
+  backgroundImage?: string;
+  backgroundClass?: string;
+  compact?: boolean;
+}
+
+const {
+  title,
+  subtitle,
+  ctaText,
+  ctaHref = '/contacto',
+  ctaSecondaryText,
+  ctaSecondaryHref,
+  backgroundImage,
+  backgroundClass = 'bg-primary',
+  compact = false
+} = Astro.props;
+
+const paddingClass = compact
+  ? 'py-8 sm:py-10 md:py-14'
+  : 'py-14 sm:py-20 md:py-28 lg:py-36';
+
+const titleClass = compact
+  ? 'text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold leading-tight mb-2 sm:mb-3'
+  : 'text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-4 sm:mb-6';
+---
+
+<section class={`relative overflow-hidden ${backgroundClass} text-white`}>
+  <!-- Background image -->
+  {backgroundImage && (
+    <div class="absolute inset-0">
+      <img src={backgroundImage} alt="" class="w-full h-full object-cover" />
+      <div class="absolute inset-0 bg-primary/60"></div>
+    </div>
+  )}
+
+  <!-- Decorative circles (solo si no hay imagen) -->
+  {!backgroundImage && (
+    <div class="absolute inset-0 overflow-hidden">
+      <div class="absolute -top-24 -right-24 w-96 h-96 bg-white/5 rounded-full"></div>
+      <div class="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-white/3 rounded-full"></div>
+    </div>
+  )}
+
+  <div class={`relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${paddingClass}`}>
+    <div class="max-w-3xl">
+      <h1 class={titleClass}>
+        {title}
+      </h1>
+      {subtitle && (
+        <p class="text-base sm:text-lg md:text-xl text-teal-100 leading-relaxed mb-6 sm:mb-8 max-w-2xl">
+          {subtitle}
+        </p>
+      )}
+      {(ctaText || ctaSecondaryText) && (
+        <div class="flex flex-wrap gap-3 sm:gap-4">
+          {ctaText && (
+            <a
+              href={ctaHref}
+              class="inline-flex items-center gap-2 bg-white text-primary px-6 py-3 sm:px-8 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-teal-50 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+            >
+              {ctaText}
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </a>
+          )}
+          {ctaSecondaryText && ctaSecondaryHref && (
+            <a
+              href={ctaSecondaryHref}
+              class="inline-flex items-center gap-2 bg-white/15 text-white border border-white/30 px-6 py-3 sm:px-8 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-white/25 transition-all duration-300"
+            >
+              {ctaSecondaryText}
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+  </div>
+</section>

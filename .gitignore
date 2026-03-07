@@ -1,0 +1,38 @@
+# Dependencias
+node_modules/
+
+# Build output
+dist/
+
+# Variables de entorno (credenciales)
+.env
+.env.local
+.env.*.local
+
+# Credenciales de deploy (no en git)
+deploy/deploy-config.bat
+
+# Configuración PHP con credenciales reales (no en git — usar config.template.php)
+php/config.php
+
+# Backups de base de datos (no en git — ocupan mucho)
+backup/test/
+backup/prod/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/settings.json
+*.suo
+*.user
+
+# Temporales
+*.tmp
+*.temp

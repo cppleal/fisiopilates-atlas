@@ -1,0 +1,56 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Hero from '../components/Hero.astro';
+---
+
+<Layout title="Política de Cookies" description="Política de cookies de Fisiopilates Atlas. Información sobre el uso de cookies en nuestro sitio web.">
+  <Hero
+    title="Política de Cookies"
+    compact
+  />
+
+  <section class="py-12 sm:py-16 md:py-20">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="space-y-8 text-text-gray leading-relaxed">
+
+        <div>
+          <h2 class="text-xl font-bold text-text-dark mb-3">¿Qué son las cookies?</h2>
+          <p>Las cookies son pequeños ficheros de texto que se almacenan en tu dispositivo cuando visitas un sitio web. Permiten que el sitio recuerde tus preferencias y mejora tu experiencia de navegación.</p>
+        </div>
+
+        <div>
+          <h2 class="text-xl font-bold text-text-dark mb-3">Cookies que utilizamos</h2>
+          <div class="space-y-4">
+            <div class="bg-bg-light rounded-xl p-4 border border-border">
+              <h3 class="font-semibold text-text-dark mb-1">Cookies técnicas (necesarias)</h3>
+              <p class="text-sm">Son imprescindibles para el correcto funcionamiento del sitio web. No requieren tu consentimiento. Incluyen las cookies de sesión del panel de administración.</p>
+            </div>
+            <div class="bg-bg-light rounded-xl p-4 border border-border">
+              <h3 class="font-semibold text-text-dark mb-1">Cookies de preferencias</h3>
+              <p class="text-sm">Recuerdan tus preferencias de navegación, como las opciones de consentimiento de cookies que has seleccionado.</p>
+            </div>
+            <div class="bg-bg-light rounded-xl p-4 border border-border">
+              <h3 class="font-semibold text-text-dark mb-1">Cookies analíticas (opcionales)</h3>
+              <p class="text-sm">Nos ayudan a entender cómo los visitantes interactúan con el sitio web, permitiéndonos mejorar su funcionamiento. Solo se activan con tu consentimiento.</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 class="text-xl font-bold text-text-dark mb-3">Gestión de cookies</h2>
+          <p>Puedes gestionar o desactivar las cookies en cualquier momento a través de los ajustes de tu navegador. Ten en cuenta que desactivar ciertas cookies puede afectar al funcionamiento del sitio.</p>
+          <p class="mt-2">También puedes revocar el consentimiento dado para las cookies opcionales haciendo clic en el botón de preferencias de cookies.</p>
+        </div>
+
+        <div>
+          <h2 class="text-xl font-bold text-text-dark mb-3">Más información</h2>
+          <p>Para cualquier consulta sobre nuestra política de cookies, puedes contactarnos en <a href="mailto:fisiopilates.atlas@gmail.com" class="text-primary hover:underline">fisiopilates.atlas@gmail.com</a>.</p>
+        </div>
+
+        <div class="text-sm text-text-light border-t border-border pt-6">
+          <p>Última actualización: enero de 2025</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>

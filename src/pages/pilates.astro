@@ -1,0 +1,192 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Hero from '../components/Hero.astro';
+import SectionTitle from '../components/SectionTitle.astro';
+---
+
+<Layout
+  title="Pilates"
+  description="Clases de Pilates en Carabanchel Alto, Madrid. Grupos reducidos de máximo 5 personas, impartidos por fisioterapeutas expertos. Pilates para embarazadas disponible."
+>
+  <Hero
+    title="Pilates"
+    subtitle="Clases de Pilates en grupos reducidos impartidas por fisioterapeutas expertos. Cuida tu cuerpo y mejora tu postura."
+    backgroundImage="/images/DSC_0052-1-2_v02.jpg"
+    compact
+  />
+
+  <!-- Intro -->
+  <section class="py-12 sm:py-16 md:py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-text-dark mb-4">
+            Pilates terapéutico con fisioterapeutas
+          </h2>
+          <p class="text-text-gray leading-relaxed mb-4">
+            Las clases de Pilates en Fisiopilates Atlas se imparten en grupos de máximo 5 personas, lo que garantiza una atención personalizada y la correcta ejecución de cada ejercicio. Todos nuestros instructores son fisioterapeutas especializados.
+          </p>
+          <p class="text-text-gray leading-relaxed mb-4">
+            El Pilates mejora la postura, fortalece la musculatura profunda (especialmente el core), aumenta la flexibilidad y contribuye al bienestar general. Es una práctica apta para todos los niveles y edades.
+          </p>
+          <p class="text-text-gray leading-relaxed mb-4">
+            Además de las clases de grupo, ofrecemos sesiones individuales y un programa específico de Pilates para embarazadas, adaptado a cada etapa del embarazo.
+          </p>
+          <!-- Primera clase gratis -->
+          <div class="flex items-center gap-3 bg-accent/10 border border-accent/20 rounded-xl px-4 py-3 mb-6">
+            <svg class="w-5 h-5 text-accent shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <p class="text-sm font-semibold text-accent">
+              ¿No estás seguro? <span class="text-text-dark">Primera clase GRATIS</span> sin compromiso, con cita previa.
+            </p>
+          </div>
+          <a
+            href="/contacto"
+            class="inline-flex items-center gap-2 bg-accent text-white px-6 py-3 rounded-xl font-semibold hover:bg-accent-light transition-all duration-300 shadow-card hover:shadow-card-hover"
+          >
+            Apuntarme a clases
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+        </div>
+        <div class="space-y-4">
+          <div class="bg-bg-light rounded-2xl p-6 border border-border">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
+                <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <h3 class="font-bold text-text-dark">Grupos reducidos</h3>
+            </div>
+            <p class="text-text-gray text-sm leading-relaxed">Máximo 5 personas por clase para garantizar la corrección postural y la atención individualizada.</p>
+          </div>
+          <div class="bg-bg-light rounded-2xl p-6 border border-border">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <h3 class="font-bold text-text-dark">Instructores fisioterapeutas</h3>
+            </div>
+            <p class="text-text-gray text-sm leading-relaxed">Todo el equipo son fisioterapeutas titulados con formación específica en Pilates terapéutico.</p>
+          </div>
+          <div class="bg-bg-light rounded-2xl p-6 border border-border">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 bg-warm/10 rounded-xl flex items-center justify-center">
+                <svg class="w-5 h-5 text-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </div>
+              <h3 class="font-bold text-text-dark">Pilates para embarazadas</h3>
+            </div>
+            <p class="text-text-gray text-sm leading-relaxed">Programa específico adaptado a cada etapa del embarazo, con ejercicios seguros y beneficiosos para madre y bebé.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Beneficios -->
+  <section class="py-12 sm:py-16 md:py-20 bg-bg-light">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <SectionTitle
+        title="Beneficios del Pilates"
+        subtitle="Una práctica completa que cuida tu cuerpo y tu mente, apta para todos los niveles."
+      />
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {[
+          { title: 'Mejora la postura', desc: 'Corrección postural y alineación de la columna vertebral, reduciendo dolores de espalda y cuello.' },
+          { title: 'Fortalece el core', desc: 'Trabajo profundo de la musculatura abdominal y lumbar, base de todos los movimientos del cuerpo.' },
+          { title: 'Aumenta la flexibilidad', desc: 'Mejora el rango de movimiento articular y la elasticidad muscular de forma progresiva y segura.' },
+          { title: 'Reduce el estrés', desc: 'La combinación de movimiento, respiración y concentración ayuda a reducir el estrés y la ansiedad.' },
+          { title: 'Previene lesiones', desc: 'Fortalece los músculos estabilizadores y mejora la propiocepción, reduciendo el riesgo de lesiones.' },
+          { title: 'Apto para todos', desc: 'Se adapta a cualquier condición física, edad o nivel de experiencia, incluidas personas con lesiones.' },
+        ].map(item => (
+          <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-card border border-border">
+            <div class="flex items-center gap-2 mb-3">
+              <svg class="w-5 h-5 text-accent shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <h3 class="font-bold text-text-dark">{item.title}</h3>
+            </div>
+            <p class="text-text-gray text-sm leading-relaxed">{item.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Pilates embarazo -->
+  <section class="py-12 sm:py-16 md:py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="bg-gradient-to-br from-primary/5 to-accent/5 rounded-3xl p-8 sm:p-10 md:p-12 border border-primary/10">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          <div>
+            <div class="inline-flex items-center gap-2 bg-warm/10 text-warm px-3 py-1 rounded-full text-sm font-semibold mb-4">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              Especial embarazo
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-text-dark mb-4">
+              Pilates para embarazadas
+            </h2>
+            <p class="text-text-gray leading-relaxed mb-4">
+              El Pilates durante el embarazo es una práctica segura y muy recomendable. Nuestros fisioterapeutas especializados diseñan un programa adaptado a cada etapa gestacional, con ejercicios que fortalecen el suelo pélvico, mejoran la postura y preparan el cuerpo para el parto.
+            </p>
+            <p class="text-text-gray leading-relaxed">
+              También trabajamos la recuperación postparto, ayudando a recuperar el tono muscular y el bienestar tras el nacimiento del bebé.
+            </p>
+          </div>
+          <div class="space-y-3">
+            {[
+              'Fortalecimiento del suelo pélvico',
+              'Mejora de la postura durante el embarazo',
+              'Alivio de dolores de espalda y ciática',
+              'Preparación física para el parto',
+              'Recuperación postparto',
+              'Sesiones adaptadas a cada trimestre',
+            ].map(benefit => (
+              <div class="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-card border border-border">
+                <svg class="w-4 h-4 text-warm shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span class="text-sm text-text-gray">{benefit}</span>
+              </div>
+            ))}
+            <div class="mt-4 rounded-2xl overflow-hidden shadow-card">
+              <img
+                src="/images/atlas_embarazada_02.jpg"
+                alt="Pilates para embarazadas en Fisiopilates Atlas"
+                class="w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-12 sm:py-16 md:py-20 bg-primary text-white text-center">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h2 class="text-2xl sm:text-3xl font-extrabold mb-4">¿Quieres empezar con el Pilates?</h2>
+      <p class="text-teal-100 text-base sm:text-lg mb-8 leading-relaxed">
+        Contáctanos y te informaremos sobre los horarios, disponibilidad y tarifas. ¡Te esperamos!
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="/contacto" class="inline-flex items-center gap-2 bg-white text-primary px-6 py-3 sm:px-8 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-teal-50 transition-all duration-300 shadow-lg">
+          Apuntarme
+        </a>
+        <a href="/precios" class="inline-flex items-center gap-2 bg-white/15 text-white border border-white/30 px-6 py-3 sm:px-8 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-white/25 transition-all duration-300">
+          Ver tarifas
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>
