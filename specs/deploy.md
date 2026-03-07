@@ -203,9 +203,81 @@ DB_PASS=...
 
 ---
 
+## Backup de base de datos
+
+Script PHP que genera un volcado SQL por entorno (TEST/PROD).
+
+```bat
+REM Backup de TEST para una versión concreta
+backup\backup.bat test v1.1.0
+
+REM Backup de ambos entornos
+backup\backup.bat all v1.1.0
+```
+
+### Ficheros generados
+```
+backup/test/v1.1.0/
+  estructura.sql   ← solo CREATE TABLE
+  completo.sql     ← estructura + datos (INSERTs en bloques de 100)
+```
+
+> Las carpetas `backup/test/` y `backup/prod/` están en `.gitignore` (no se suben al repositorio).
+
+---
+
+## Repositorio GitHub
+
+- **Repo**: `cppleal/fisiopilates-atlas` (privado)
+- **Remote**: `https://github.com/cppleal/fisiopilates-atlas.git`
+- **Rama principal**: `master`
+
+### Ficheros excluidos del repositorio (`.gitignore`)
+| Fichero/Carpeta | Motivo |
+|-----------------|--------|
+| `node_modules/` | Dependencias (se regeneran con `npm install`) |
+| `dist/` | Build output (se regenera con `npm run build`) |
+| `.env` | Credenciales FTP y BD |
+| `deploy/deploy-config.bat` | Credenciales FTP reales |
+| `php/config.php` | Credenciales BD, SMTP y hCaptcha reales |
+| `backup/test/` | Volcados SQL de TEST |
+| `backup/prod/` | Volcados SQL de PROD |
+
+### Plantillas en git
+- `deploy/deploy-config.template.bat` → copiar como `deploy-config.bat` y rellenar
+- `php/config.template.php` → copiar como `php/config.php` y rellenar
+
+---
+
+## Procedimiento de creación de versión
+
+Ejecutar cuando el usuario lo indique explícitamente. **Nunca automáticamente.**
+
+### Script automatizado
+```bat
+crear-version.bat X.Y.Z descripcion_breve
+```
+
+### Pasos manuales (cuando Claude gestiona la versión)
+1. `backup\backup.bat test vX.Y.Z` — backup BD TEST
+2. Actualizar specs afectadas en `specs/`
+3. Crear `versiones/vX.Y.Z-desc/changelog.md`
+4. Actualizar fichero `VERSION`
+5. `git add -A && git commit -m "version vX.Y.Z-desc" && git push`
+
+### Semántica de versiones
+| Tipo | Cuándo |
+|------|--------|
+| PATCH (X.Y.**Z**) | Correcciones, ajustes menores |
+| MINOR (X.**Y**.0) | Nueva página, nueva funcionalidad |
+| MAJOR (**X**.0.0) | Rediseño completo, cambio de arquitectura |
+
+---
+
 ## Versionado
 
 | Versión | Fecha | Descripción |
 |---------|-------|-------------|
 | `0.0.1` | 2026-02 | Scaffolding inicial |
 | `1.0.0` | 2026-03-06 | Primera versión completa: 8 páginas, contacto, admin, cookies RGPD |
+| `1.1.0` | 2026-03-07 | Sistema de backup BD, repositorio GitHub y procedimiento de versionado |
