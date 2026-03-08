@@ -11,6 +11,7 @@ Historial de versiones del proyecto. Cada versión tiene su propia carpeta con:
 | [v0.1.0](v0.1.0-scaffolding_inicial/) | 2026-02 | Scaffolding inicial del proyecto |
 | [v1.0.0](v1.0.0-primera_version_completa/) | 2026-03-06 | Primera versión completa: 8 páginas, contacto, admin, cookies RGPD |
 | [v1.1.0](v1.1.0-sistema_versionado/) | 2026-03-07 | Sistema de backup BD, repositorio GitHub y procedimiento de versionado |
+| [v1.2.0](v1.2.0-logo_cabecera/) | 2026-03-08 | Logo real en la cabecera |
 
 ## Formato de versiones
 

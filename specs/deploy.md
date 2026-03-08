@@ -281,3 +281,4 @@ crear-version.bat X.Y.Z descripcion_breve
 | `0.0.1` | 2026-02 | Scaffolding inicial |
 | `1.0.0` | 2026-03-06 | Primera versión completa: 8 páginas, contacto, admin, cookies RGPD |
 | `1.1.0` | 2026-03-07 | Sistema de backup BD, repositorio GitHub y procedimiento de versionado |
+| `1.2.0` | 2026-03-08 | Logo real en la cabecera (portada_v02.jpg, mix-blend-mode screen) |
