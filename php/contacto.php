@@ -59,6 +59,7 @@ $email    = trim($_POST['email'] ?? '');
 $telefono = trim($_POST['telefono'] ?? '');
 $motivo   = trim($_POST['motivo'] ?? '');
 $mensaje  = trim($_POST['mensaje'] ?? '');
+$copia    = !empty($_POST['copia']);
 
 if (empty($nombre) || empty($email) || empty($motivo) || empty($mensaje)) {
     header('Location: /contacto?status=error');
@@ -169,6 +170,43 @@ try {
         CONTACT_BCC,
         CONTACT_REPLY_TO
     );
+
+    // Enviar copia al usuario si lo ha solicitado
+    if ($copia) {
+        $copiaHtml = "
+        <div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;'>
+            <div style='background:#1B6B6E;color:white;padding:20px 30px;border-radius:12px 12px 0 0;'>
+                <h2 style='margin:0;font-size:18px;'>Copia de tu mensaje</h2>
+                <p style='margin:5px 0 0;font-size:14px;opacity:0.8;'>Fisiopilates Atlas</p>
+            </div>
+            <div style='background:#ffffff;padding:30px;border:1px solid #d1e7e7;border-top:none;border-radius:0 0 12px 12px;'>
+                <p style='color:#334155;margin-top:0;'>Hola <strong>" . htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8') . "</strong>, te enviamos una copia del mensaje que has remitido a través de nuestro formulario de contacto. Nos pondremos en contacto contigo a la mayor brevedad.</p>
+                <hr style='border:none;border-top:1px solid #e2e8f0;margin:20px 0;'/>
+                <table style='width:100%;border-collapse:collapse;'>
+                    <tr>
+                        <td style='padding:6px 0;font-weight:bold;color:#334155;width:120px;vertical-align:top;'>Motivo:</td>
+                        <td style='padding:6px 0;color:#1e293b;'>" . htmlspecialchars($motivoTexto, ENT_QUOTES, 'UTF-8') . "</td>
+                    </tr>
+                    <tr>
+                        <td style='padding:6px 0;font-weight:bold;color:#334155;vertical-align:top;'>Mensaje:</td>
+                        <td style='padding:6px 0;color:#1e293b;white-space:pre-wrap;'>" . htmlspecialchars($mensaje, ENT_QUOTES, 'UTF-8') . "</td>
+                    </tr>
+                    <tr>
+                        <td style='padding:6px 0;font-weight:bold;color:#334155;vertical-align:top;'>Fecha:</td>
+                        <td style='padding:6px 0;color:#94a3b8;font-size:13px;'>" . date('d/m/Y H:i:s') . "</td>
+                    </tr>
+                </table>
+                <hr style='border:none;border-top:1px solid #e2e8f0;margin:20px 0;'/>
+                <p style='color:#94a3b8;font-size:12px;margin-bottom:0;'>Este es un mensaje automático. No respondas a este correo. Para contactarnos directamente escríbenos a <a href='mailto:fisiopilates.atlas@gmail.com' style='color:#1B6B6E;'>fisiopilates.atlas@gmail.com</a> o llámanos al <a href='tel:691487526' style='color:#1B6B6E;'>691 487 526</a>.</p>
+            </div>
+        </div>";
+
+        $mailer->send(
+            $email,
+            'Copia de tu mensaje — Fisiopilates Atlas',
+            $copiaHtml
+        );
+    }
 
     header('Location: /contacto?status=ok');
 } catch (Exception $e) {

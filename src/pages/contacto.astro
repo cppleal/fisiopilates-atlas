@@ -104,6 +104,25 @@ import Hero from '../components/Hero.astro';
                 ></textarea>
               </div>
 
+              <!-- Copia del mensaje -->
+              <div class="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="copia"
+                  name="copia"
+                  class="mt-1 w-4 h-4 text-primary border-border rounded focus:ring-primary/20"
+                />
+                <label for="copia" class="text-sm text-text-gray">
+                  Enviar una copia de este mensaje a mi correo electrónico
+                </label>
+              </div>
+
+              <!-- Disclaimer RGPD -->
+              <div class="bg-bg-light rounded-xl border border-border p-4 text-xs text-text-gray leading-relaxed space-y-2">
+                <p>De conformidad con lo dispuesto en el Reglamento General de Protección de Datos de la UE (RGPD) y en la Ley Orgánica de Protección de Datos 3/2018 de 5 de diciembre, le informamos que los datos que nos facilite forman parte de un tratamiento del que es responsable <strong>NOELIA JIMENEZ MARTIN con CIF 05293161X</strong> con la finalidad de gestionar sus datos para responder las dudas o consultas recibidas. La legitimación del tratamiento se basa en el consentimiento del interesado. No se cederán datos a terceros salvo obligación legal. Podrá ejercitar los derechos de acceso, rectificación y supresión de los datos, así como otros derechos, tal y como se explica en la información adicional. Puede consultar la información adicional y detallada sobre protección de datos clicando en la <a href="/privacidad" class="text-primary hover:underline font-medium">POLÍTICA DE PRIVACIDAD</a> o rellenando el presente formulario de contacto.</p>
+                <p>Al enviar este formulario, está aceptando nuestra <a href="/privacidad" class="text-primary hover:underline font-medium">Política de Privacidad</a>.</p>
+              </div>
+
               <!-- Privacidad -->
               <div class="flex items-start gap-3">
                 <input
