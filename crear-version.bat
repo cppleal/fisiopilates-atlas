@@ -63,8 +63,8 @@ if exist "%VERSION_DIR%" (
 )
 
 REM --- PASO 1: Backup de base de datos ---
-echo %YELLOW%[1/6] Backup de base de datos (TEST)...%RESET%
-php "%~dp0backup\backup-database.php" test v%VERSION%
+echo %YELLOW%[1/6] Backup de base de datos (TEST + PROD)...%RESET%
+php "%~dp0backup\backup-database.php" all v%VERSION%
 if errorlevel 1 (
     echo %RED%ERROR en el backup. Abortando.%RESET%
     exit /b 1
@@ -154,7 +154,7 @@ echo %GREEN%Version %VERSION_TAG% creada correctamente.%RESET%
 echo %GREEN%============================================%RESET%
 echo.
 echo  Resumen:
-echo   - Backup BD:   backup\test\v%VERSION%\
+echo   - Backup BD:   backup\test\v%VERSION%\ y backup\prod\v%VERSION%\
 echo   - Specs:       specs\ (actualizadas manualmente)
 echo   - Changelog:   versiones\%VERSION_TAG%\changelog.md
 echo   - VERSION:     %VERSION%

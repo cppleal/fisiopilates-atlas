@@ -31,8 +31,8 @@ $environments = [
     'prod' => [
         'host'       => 'PMYSQL117.dns-servicio.com',
         'database'   => '9702349_fisio',
-        'user'       => 'USUARIO_PROD_PENDIENTE',   // TODO: completar
-        'password'   => 'PASSWORD_PROD_PENDIENTE',  // TODO: completar
+        'user'       => 'cppleal-fisio',
+        'password'   => 'riRkvnuR9KuTed@s',
         'output_dir' => __DIR__ . '/prod/'
     ]
 ];

@@ -27,12 +27,12 @@ Migración de Joomla a web moderna con Astro 5 + Tailwind CSS 4.
 - **Admin web**: https://40749769.servicio-online.net/admin/
 - **Credenciales**: en `.env`
 
-### PRODUCCIÓN (Joomla legacy — NO TOCAR)
+### PRODUCCIÓN (web nueva activa desde 2026-03-15)
 - **URL**: https://fisiopilatesatlas.es/
-- **SFTP**: 40546259.servicio-online.net (puerto 22)
+- **FTP**: 40546259.servicio-online.net (puerto 21)
 - **Usuario**: user-9702349
-- **BD**: PMYSQL117.dns-servicio.com — 9702349_fisio
-- **Estado**: Joomla activo. Solo accedemos para bajar imágenes.
+- **BD**: PMYSQL117.dns-servicio.com — 9702349_fisio / cppleal-fisio
+- **Admin web**: https://fisiopilatesatlas.es/admin/
 - **Credenciales**: en `.env`
 
 ## Estructura del proyecto
@@ -89,7 +89,6 @@ VERSION             → Versión actual (formato X.Y.Z)
 - `node scripts/deploy.mjs` ✅ → TEST, permitido sin confirmación
 - `node scripts/deploy.mjs prod` ❌ → REQUIERE autorización explícita del usuario
 - NUNCA desplegar a PROD sin permiso del usuario
-- PROD tiene Joomla legacy activo que NO debe sobreescribirse
 
 ### Proceso de deploy (WinSCP)
 1. Cambios en `src/` o `php/`
@@ -140,9 +139,7 @@ El script guía paso a paso: backup BD → revisión specs → changelog → VER
 
 #### Paso 1: Backup de base de datos
 ```bat
-backup\backup.bat test v1.1.0
-REM Si hay credenciales PROD configuradas:
-REM backup\backup.bat all v1.1.0
+backup\backup.bat all v1.1.0
 ```
 
 #### Paso 2: Revisar y actualizar especificaciones
@@ -210,12 +207,6 @@ git push
 - Credenciales en `.env` y en `php/config.php` (vía getenv)
 
 ## Pendiente / TODO
-- [ ] Configurar credenciales PROD de BD en `backup/backup-database.php`
-- [ ] Crear repositorio GitHub: `cppleal/fisiopilates-atlas` (privado)
-- [ ] Primer push: `git remote add origin https://github.com/cppleal/fisiopilates-atlas.git && git push -u origin main`
 - [ ] Configurar hCaptcha (reemplazar YOUR_HCAPTCHA_SITE_KEY en contacto.astro y config.php)
 - [ ] Configurar SMTP en php/config.php
-- [ ] Primer deploy TEST: `npm run build && node scripts/deploy.mjs`
-- [ ] Ejecutar php/install.php en TEST para crear tablas
 - [ ] Actualizar tarifas reales en precios.astro
-- [ ] Ajustar coordenadas del mapa en index.astro
