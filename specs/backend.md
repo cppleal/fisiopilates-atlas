@@ -4,23 +4,36 @@
 
 Cargado con `require_once` en todos los endpoints PHP.
 
+### Detección automática de entorno
+
+`config.php` detecta el entorno por el hostname del servidor:
+
+```php
+$_host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
+$_isProd = (strpos($_host, 'fisiopilatesatlas.es') !== false);
+```
+
+| Entorno | Host detectado | BD utilizada |
+|---------|---------------|--------------|
+| PRODUCCIÓN | `fisiopilatesatlas.es` | `PMYSQL117.dns-servicio.com / 9702349_fisio` |
+| TEST | cualquier otro | `PMYSQL168.dns-servicio.com / 10067489_fisiopilates_TEST` |
+
+Las variables de entorno (`DB_HOST`, `DB_NAME`, etc.) tienen prioridad sobre la auto-detección si están definidas.
+
 ### Constantes definidas
 
-| Constante | Valor TEST | Descripción |
-|-----------|-----------|-------------|
-| `DB_HOST` | `PMYSQL168.dns-servicio.com` | Host MySQL |
-| `DB_NAME` | `10067489_fisiopilates_TEST` | Nombre BD |
-| `DB_USER` | `cppleal_fisiopilates` | Usuario BD |
-| `DB_PASS` | *(en .env)* | Contraseña BD |
-| `APP_SECRET` | `atlas_2025_s3cr3t_k3y_*` | Clave sesiones admin |
-| `HCAPTCHA_SITE_KEY` | *(en config.php)* | Clave pública hCaptcha |
-| `HCAPTCHA_SECRET` | *(en config.php)* | Clave privada hCaptcha |
-| `SMTP_HOST` | `smtp.servidor-correo.net` | Servidor SMTP |
-| `SMTP_PORT` | `587` | Puerto SMTP (STARTTLS) |
-| `SMTP_USER` | `envios@fisiopilatesatlas.es` | Usuario SMTP |
-| `SMTP_FROM` | `envios@fisiopilatesatlas.es` | Remitente emails |
-| `IS_TEST_ENV` | `true` | Auto-detectado por nombre BD |
-| `CONTACT_TO` | `cppleal@gmail.com` (TEST) | Destinatario contacto |
+| Constante | TEST | PROD | Descripción |
+|-----------|------|------|-------------|
+| `DB_HOST` | `PMYSQL168.dns-servicio.com` | `PMYSQL117.dns-servicio.com` | Host MySQL |
+| `DB_NAME` | `10067489_fisiopilates_TEST` | `9702349_fisio` | Nombre BD |
+| `DB_USER` | `cppleal_fisiopilates` | `cppleal-fisio` | Usuario BD |
+| `APP_SECRET` | `atlas_2025_s3cr3t_k3y_*` | igual | Clave sesiones admin |
+| `HCAPTCHA_SITE_KEY` | `1d9426de-...` | igual | Clave pública hCaptcha |
+| `IS_TEST_ENV` | `true` | `false` | Auto-detectado por hostname |
+| `CONTACT_TO` | `cppleal@gmail.com` | `fisiopilates.atlas@gmail.com` | Destinatario contacto |
+| `SMTP_HOST` | `smtp.servidor-correo.net` | igual | Servidor SMTP |
+| `SMTP_PORT` | `587` | igual | Puerto SMTP (STARTTLS) |
+| `SMTP_USER` | `envios@fisiopilatesatlas.es` | igual | Usuario SMTP |
 
 ### Función `getDB(): PDO`
 - Singleton PDO con `ERRMODE_EXCEPTION`
@@ -41,10 +54,6 @@ Cargado con `require_once` en todos los endpoints PHP.
 3. Guarda en tabla `contacto` de la BD
 4. Envía email al destinatario configurado (`CONTACT_TO`)
 5. Devuelve JSON `{ success: true|false, message: "..." }`
-
-### Cabeceras
-- `Content-Type: application/json`
-- `Access-Control-Allow-Origin` dinámico (soporta preflight OPTIONS)
 
 ### Email en TEST
 - Destinatario: `cppleal@gmail.com`
@@ -72,27 +81,12 @@ Cargado con `require_once` en todos los endpoints PHP.
 }
 ```
 
-### Acciones válidas
-| Action | Descripción |
-|--------|-------------|
-| `accept_all` | Usuario aceptó todas las cookies |
-| `reject_all` | Usuario rechazó cookies opcionales |
-| `save_preferences` | Usuario guardó selección personalizada |
-| `withdraw` | Usuario retiró consentimiento previamente dado |
-
-### Respuesta
-```json
-{ "success": true, "message": "Preferencias registradas" }
-```
-
 ---
 
 ## SMTP: `php/lib/SmtpMailer.php`
 
 Implementación SMTP nativa (sin PHPMailer / dependencias externas).
 - Soporta STARTTLS (puerto 587)
-- Soporte adjuntos
-- Cabeceras anti-spam (MIME, Content-Type)
 - Solo se instancia desde `contacto.php`
 
 ---
@@ -107,7 +101,7 @@ Implementación SMTP nativa (sin PHPMailer / dependencias externas).
 | `nombre` | VARCHAR(255) NOT NULL | Nombre del remitente |
 | `email` | VARCHAR(255) NOT NULL | Email del remitente |
 | `telefono` | VARCHAR(50) DEFAULT '' | Teléfono (opcional) |
-| `motivo` | VARCHAR(100) NOT NULL | Motivo de contacto (select) |
+| `motivo` | VARCHAR(100) NOT NULL | Motivo de contacto |
 | `mensaje` | TEXT NOT NULL | Cuerpo del mensaje |
 | `ip` | VARCHAR(45) DEFAULT '' | IP del visitante |
 | `leido` | TINYINT(1) DEFAULT 0 | 0=no leído, 1=leído |
@@ -125,34 +119,44 @@ Implementación SMTP nativa (sin PHPMailer / dependencias externas).
 | `last_login` | TIMESTAMP NULL | Último acceso |
 | `created_at` | TIMESTAMP DEFAULT NOW() | Creación |
 
-**Usuario por defecto:** `admin` / `atlas2025` (hash generado con `password_hash()` PHP)
+**Usuario por defecto:** `admin` / `atlas2025` (cambiar tras primer acceso)
+
+### Tabla `admin_ips`
+
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | INT AUTO_INCREMENT PK | — |
+| `ip_address` | VARCHAR(45) UNIQUE NOT NULL | Dirección IP permitida (IPv4 o IPv6) |
+| `descripcion` | VARCHAR(255) DEFAULT '' | Etiqueta descriptiva (ej: "Oficina") |
+| `created_at` | TIMESTAMP DEFAULT NOW() | Fecha de alta |
+
+> Si la tabla está vacía, el acceso al admin es libre. En cuanto se añade una IP, solo esa IP (y las que se añadan) pueden acceder.
 
 ### Tabla `cookie_consent_logs`
 
 | Columna | Tipo | Descripción |
 |---------|------|-------------|
 | `id` | INT AUTO_INCREMENT PK | — |
-| `session_token` | VARCHAR(255) NULL | Token UUID de sesión del visitante |
+| `session_token` | VARCHAR(64) NULL | Token UUID de sesión del visitante |
 | `action` | VARCHAR(50) NOT NULL | Acción realizada |
-| `necessary` | TINYINT(1) DEFAULT 1 | Siempre 1 (cookies necesarias) |
 | `analytics` | TINYINT(1) DEFAULT 0 | Cookies analíticas aceptadas |
 | `functional` | TINYINT(1) DEFAULT 0 | Cookies funcionales aceptadas |
-| `ip_address` | VARCHAR(45) NULL | IP completa del visitante |
-| `user_agent` | VARCHAR(100) NULL | Navegador / SO resumido (ej: "Chrome / Windows") |
-| `page_url` | VARCHAR(500) NULL | URL de la página donde se dio el consentimiento |
-| `consent_version` | VARCHAR(10) DEFAULT '1.0' | Versión de la política de cookies |
+| `necessary` | TINYINT(1) DEFAULT 1 | Siempre 1 (cookies necesarias) |
+| `ip_address` | VARCHAR(45) NULL | IP del visitante |
+| `user_agent` | TEXT NULL | Navegador / SO |
+| `page_url` | VARCHAR(500) NULL | URL donde se dio el consentimiento |
+| `consent_version` | VARCHAR(10) NULL | Versión de la política de cookies |
 | `created_at` | TIMESTAMP DEFAULT NOW() | Fecha/hora del registro |
-
-> **Nota RGPD:** Se almacena la IP completa del visitante (decisión del responsable del tratamiento). Purga automática a los 13 meses (art. 5.1.e RGPD). Se registra solo "Chrome / Windows" como user_agent, no el UA completo.
 
 ---
 
 ## Instalación inicial (`php/install.php`)
 
 Script de un único uso que:
-1. Crea las 3 tablas si no existen
-2. Inserta el admin por defecto (`admin`/`atlas2025`)
-3. Muestra confirmación HTML
+1. Crea las 4 tablas si no existen: `contacto`, `admins`, `admin_ips`, `cookie_consent_logs`
+2. Registra la IP del instalador como primera IP permitida (`REMOTE_ADDR`)
+3. Inserta el admin por defecto (`admin`/`atlas2025`)
+4. Muestra confirmación HTML con la IP registrada
 
 **IMPORTANTE:** Eliminar del servidor tras ejecutarlo.
 
@@ -166,5 +170,6 @@ Acceso: `https://dominio/install.php` (se sube con flag `--install` en deploy)
 - hCaptcha antes de procesar formulario → anti-spam/bot
 - Sesión PHP con `session_regenerate_id()` en login admin
 - Password con `password_hash()` / `password_verify()` bcrypt
-- `.htaccess` deniega acceso a `.env`, `.sql`, `.md`, `.json`, `.log`
-- Headers CORS restrictivos (solo orígenes conocidos en producción)
+- Protección de acceso al admin por IP (`admin_ips`)
+- `.htaccess` con `Options -Indexes` → sin listado de directorios
+- Headers CORS restrictivos en endpoints PHP

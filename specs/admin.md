@@ -7,59 +7,118 @@
 | URL TEST | `https://40749769.servicio-online.net/admin/` |
 | URL PROD | `https://fisiopilatesatlas.es/admin/` |
 | Usuario | `admin` |
-| Contraseña | `atlas2025` |
+| Contraseña por defecto | `atlas2025` (cambiar tras primer acceso) |
 
 > Sesión PHP con cookie de sesión. Requiere HTTPS en producción.
 
 ---
 
-## Archivo: `php/admin/index.php`
+## Protección por IP
 
-Archivo monolítico PHP que gestiona:
-- Login / logout (sesiones PHP)
-- Dashboard principal con tarjetas de estadísticas
-- Lista de mensajes de contacto
-- Marcado de mensajes como leídos
+El acceso al panel está restringido por dirección IP mediante `php/admin/ip-check.php`.
 
-### Vistas dentro de `index.php`
+### Comportamiento
+| Situación | Acceso |
+|-----------|--------|
+| Tabla `admin_ips` vacía | Libre (estado inicial, sin restricción) |
+| IP en la lista | Permitido |
+| IP no en la lista | Bloqueado — HTTP 403 con mensaje y la IP denegada |
 
-#### Vista Login
-- Formulario usuario + contraseña
-- Verificación con `password_verify()` bcrypt
-- `session_regenerate_id(true)` tras login correcto
-- Errores genéricos (no revela si usuario o contraseña es incorrecto)
+### Funcionamiento técnico
+- La verificación se ejecuta en **cada request** al panel (antes del login)
+- Función `getClientIP()` → lee `$_SERVER['REMOTE_ADDR']`
+- Función `checkAdminIP(PDO $pdo)` → consulta tabla `admin_ips`
+- Ambas funciones están en `php/admin/ip-check.php`
+- Incluido con `require_once` en `index.php` y `cookies.php`
 
-#### Vista Dashboard
-Topbar con navegación:
-- **Mensajes** (vista principal)
-- **Cookies RGPD** → enlace a `/admin/cookies.php`
-
-**Tarjetas de resumen:**
-| Tarjeta | Dato | Enlace |
-|---------|------|--------|
-| Total mensajes | `COUNT(*)` tabla `contacto` | — |
-| No leídos | `COUNT(*) WHERE leido=0` | — |
-| Hoy | `COUNT(*) WHERE DATE(created_at)=CURDATE()` | — |
-| Cookies RGPD | Total registros `cookie_consent_logs` | `/admin/cookies.php` |
-
-**Lista de mensajes:**
-- Columnas: Fecha, Nombre, Email, Teléfono, Motivo, Mensaje (truncado), Estado
-- Botón "Marcar leído" (POST a sí mismo con `action=mark_read&id=X`)
-- Mensajes no leídos destacados con fondo teal suave
-- Ordenados por `created_at DESC`
+### Activación
+La protección se activa automáticamente en cuanto se añade la primera IP a la tabla. Mientras la tabla esté vacía, el acceso es libre (comportamiento de instalación inicial).
 
 ---
 
-## Archivo: `php/admin/cookies.php`
+## Archivos del panel
+
+| Archivo | Descripción |
+|---------|-------------|
+| `php/admin/index.php` | Login + Dashboard + Gestión IPs + Cambio contraseña |
+| `php/admin/cookies.php` | Vista registros cookie consent (RGPD) |
+| `php/admin/ip-check.php` | Helper de verificación de IP por request |
+
+---
+
+## `php/admin/index.php`
+
+Archivo monolítico PHP que gestiona:
+- Verificación de IP (antes del login)
+- Login / logout (sesiones PHP)
+- Dashboard principal con tarjetas de estadísticas
+- Lista de mensajes de contacto con paginación
+- Marcado de mensajes como leídos / eliminación
+- Gestión de IPs permitidas
+- Cambio de contraseña del admin
+
+### Vista Login
+- Formulario usuario + contraseña
+- Verificación con `password_verify()` bcrypt
+- Errores genéricos (no revela si falla usuario o contraseña)
+
+### Vista Dashboard
+
+**Topbar:**
+- Hola, {nombre admin}
+- Enlace a Cookies RGPD
+- Ver web
+- Cerrar sesión
+
+**Tarjetas de resumen:**
+| Tarjeta | Dato |
+|---------|------|
+| Mensajes totales | `COUNT(*)` tabla `contacto` |
+| Sin leer | `COUNT(*) WHERE leido=0` |
+| Cookies RGPD | Enlace a `/admin/cookies.php` |
+| IPs permitidas | `COUNT(*)` tabla `admin_ips` (naranja si vacía) |
+
+**Lista de mensajes:**
+- Columnas: Estado, Fecha, Nombre, Email/Tel, Motivo, Mensaje (truncado), Acciones
+- Botón "Marcar leído" + "Eliminar" por mensaje
+- Mensajes no leídos destacados con fondo teal suave
+- Paginación: 20 por página, ordenados por `created_at DESC`
+
+### Sección: Control de acceso por IP
+
+**Tabla de IPs registradas:**
+- Muestra IP, descripción, fecha de alta
+- Badge "Tu IP actual" sobre la IP de la sesión activa
+- Botón "Eliminar" con aviso de advertencia si es la IP actual
+
+**Formulario añadir IP:**
+- Campo IP pre-rellenado con la IP actual detectada
+- Campo descripción (opcional, ej: "Oficina", "Casa")
+- Botón "Añadir IP"
+- Validación: `filter_var($ip, FILTER_VALIDATE_IP)`
+
+**Acciones GET:**
+- `?action=delete_ip&id=X` → elimina IP, redirige a `#ips`
+
+### Sección: Cambiar contraseña
+
+Formulario con tres campos obligatorios:
+1. **Contraseña actual** — verificada con `password_verify()` antes de cambiar
+2. **Nueva contraseña** — mínimo 8 caracteres
+3. **Confirmar nueva contraseña** — debe coincidir con el campo anterior
+
+---
+
+## `php/admin/cookies.php`
 
 Vista de registros de consentimiento de cookies.
 
-**Require path:** `require_once __DIR__ . '/../api/cookies/CookieConsentService.php';`
+**Includes:** `config.php`, `ip-check.php`, `CookieConsentService.php`
 
 ### Funcionalidades
 
 #### Panel de estadísticas (período seleccionable)
-Filtros de período: Hoy | Semana | Mes (defecto) | Año | Todos
+Filtros: Hoy | Semana | Mes (defecto) | Año | Todos
 
 | Métrica | Descripción |
 |---------|-------------|
@@ -70,39 +129,31 @@ Filtros de período: Hoy | Semana | Mes (defecto) | Año | Todos
 | % Analíticas | `AVG(analytics) * 100` |
 | % Funcionales | `AVG(functional) * 100` |
 
-Barras de porcentaje visuales para analíticas y funcionales.
-
-#### Filtros de historial
-- Por acción (select)
-- Por fecha desde / hasta
-
 #### Tabla de registros
 Paginación: 25 registros por página
 
 | Columna | Fuente |
 |---------|--------|
 | Fecha | `created_at` formateada `d/m/Y H:i` |
-| Token sesión | `session_token` (truncado a 20 chars) |
 | Acción | Label en español |
-| Necesarias | Siempre Sí |
 | Analíticas | Sí / No |
 | Funcionales | Sí / No |
-| IP | `ip_address` completa |
-| Navegador | `user_agent` ("Chrome / Windows") |
+| IP | `ip_address` |
+| Navegador | `user_agent` |
 | Página | `page_url` |
-| Versión | `consent_version` |
 
 #### Exportación CSV
-Botón "Exportar CSV" → descarga `cookies_rgpd_YYYY-MM-DD.csv`
+Botón "Descargar CSV" → `cookies_YYYY-MM-DD.csv`
 - BOM UTF-8 para compatibilidad Excel
-- Separador punto y coma (`;`)
-- Columnas: Fecha, Token sesión, Acción, Necesarias, Analíticas, Funcionales, IP, Página, Versión
+- Filtros activos aplicados a la exportación
 
 ---
 
 ## Seguridad del panel
 
-- Todas las vistas verifican sesión activa (`$_SESSION['admin_id']`)
+- **Protección por IP** en cada request (antes incluso del login)
+- Verificación de sesión activa (`$_SESSION['admin_id']`) en todas las vistas
 - Redirección a login si no autenticado
-- Queries con PDO prepared statements
-- Sin exposición de errores de BD al usuario
+- Queries con PDO prepared statements (sin SQLi)
+- Cambio de contraseña requiere verificar la contraseña actual
+- Sin exposición de errores de BD al usuario final

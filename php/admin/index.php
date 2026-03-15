@@ -1,11 +1,18 @@
 <?php
 /**
  * Panel de Administración - Fisiopilates Atlas
- * Login y gestión de mensajes de contacto.
+ * Login, mensajes de contacto, gestión de IPs permitidas y cambio de contraseña.
  */
 
 session_start();
 require_once __DIR__ . '/../api/config.php';
+require_once __DIR__ . '/ip-check.php';
+
+// Conexión a BD (necesaria para verificación de IP, login y operaciones del panel)
+$pdo = getDB();
+
+// Verificación de IP permitida — bloquea si hay IPs configuradas y la actual no está en lista
+checkAdminIP($pdo);
 
 // =========================================
 // LOGOUT
@@ -25,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     $password = $_POST['password'] ?? '';
 
     if (!empty($username) && !empty($password)) {
-        $pdo = getDB();
         $stmt = $pdo->prepare("SELECT id, username, password, nombre FROM admins WHERE username = ?");
         $stmt->execute([$username]);
         $admin = $stmt->fetch();
@@ -99,7 +105,6 @@ if (!isset($_SESSION['admin_id'])) {
 // =========================================
 // PANEL ADMIN (usuario autenticado)
 // =========================================
-$pdo = getDB();
 
 // Marcar como leído
 if (isset($_GET['action']) && $_GET['action'] === 'read' && isset($_GET['id'])) {
@@ -117,24 +122,62 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     exit;
 }
 
+// Eliminar IP permitida
+if (isset($_GET['action']) && $_GET['action'] === 'delete_ip' && isset($_GET['id'])) {
+    $id = (int)$_GET['id'];
+    $pdo->prepare("DELETE FROM admin_ips WHERE id = ?")->execute([$id]);
+    header('Location: /admin/#ips');
+    exit;
+}
+
+// Añadir IP permitida
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_ip'])) {
+    $ipAddress   = trim($_POST['ip_address']    ?? '');
+    $descripcion = trim($_POST['ip_descripcion'] ?? '');
+    if (filter_var($ipAddress, FILTER_VALIDATE_IP)) {
+        try {
+            $pdo->prepare("INSERT INTO admin_ips (ip_address, descripcion) VALUES (?, ?)")
+                ->execute([$ipAddress, $descripcion]);
+            $ipMsg = 'IP añadida correctamente.';
+        } catch (PDOException $e) {
+            $ipError = 'Esta IP ya existe en la lista de acceso.';
+        }
+    } else {
+        $ipError = 'Dirección IP no válida.';
+    }
+}
+
 // Cambiar contraseña
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
-    $newPass = $_POST['new_password'] ?? '';
-    if (strlen($newPass) >= 8) {
-        $hashed = password_hash($newPass, PASSWORD_DEFAULT);
-        $pdo->prepare("UPDATE admins SET password = ? WHERE id = ?")->execute([$hashed, $_SESSION['admin_id']]);
-        $passMsg = 'Contraseña actualizada correctamente.';
+    $currentPass = $_POST['current_password'] ?? '';
+    $newPass     = $_POST['new_password']     ?? '';
+    $confirmPass = $_POST['confirm_password'] ?? '';
+
+    if (strlen($newPass) < 8) {
+        $passError = 'La nueva contraseña debe tener al menos 8 caracteres.';
+    } elseif ($newPass !== $confirmPass) {
+        $passError = 'La nueva contraseña y la confirmación no coinciden.';
     } else {
-        $passError = 'La contraseña debe tener al menos 8 caracteres.';
+        $stmt = $pdo->prepare("SELECT password FROM admins WHERE id = ?");
+        $stmt->execute([$_SESSION['admin_id']]);
+        $adminData = $stmt->fetch();
+
+        if (!$adminData || !password_verify($currentPass, $adminData['password'])) {
+            $passError = 'La contraseña actual introducida es incorrecta.';
+        } else {
+            $hashed = password_hash($newPass, PASSWORD_DEFAULT);
+            $pdo->prepare("UPDATE admins SET password = ? WHERE id = ?")->execute([$hashed, $_SESSION['admin_id']]);
+            $passMsg = 'Contraseña actualizada correctamente.';
+        }
     }
 }
 
 // Obtener mensajes
-$page = max(1, (int)($_GET['page'] ?? 1));
+$page    = max(1, (int)($_GET['page'] ?? 1));
 $perPage = 20;
-$offset = ($page - 1) * $perPage;
+$offset  = ($page - 1) * $perPage;
 
-$total = $pdo->query("SELECT COUNT(*) FROM contacto")->fetchColumn();
+$total      = $pdo->query("SELECT COUNT(*) FROM contacto")->fetchColumn();
 $totalPages = ceil($total / $perPage);
 
 $stmt = $pdo->prepare("SELECT * FROM contacto ORDER BY created_at DESC LIMIT ? OFFSET ?");
@@ -142,6 +185,10 @@ $stmt->execute([$perPage, $offset]);
 $mensajes = $stmt->fetchAll();
 
 $noLeidos = $pdo->query("SELECT COUNT(*) FROM contacto WHERE leido = 0")->fetchColumn();
+
+// Obtener IPs permitidas
+$allowedIPs      = $pdo->query("SELECT * FROM admin_ips ORDER BY created_at DESC")->fetchAll();
+$clientIPCurrent = getClientIP();
 
 // Motivos legibles
 $motivos = [
@@ -180,21 +227,30 @@ $motivos = [
         .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.7rem; font-weight: 600; }
         .badge-new { background: #ccfbf1; color: #0d9488; }
         .badge-read { background: #f1f5f9; color: #64748b; }
-        .btn { display: inline-block; padding: 0.4rem 0.8rem; border-radius: 0.5rem; font-size: 0.75rem; text-decoration: none; font-weight: 500; transition: all 0.2s; }
+        .badge-current { background: #dbeafe; color: #1d4ed8; }
+        .btn { display: inline-block; padding: 0.4rem 0.8rem; border-radius: 0.5rem; font-size: 0.75rem; text-decoration: none; font-weight: 500; transition: all 0.2s; cursor: pointer; border: none; }
         .btn-read { background: #ccfbf1; color: #0d9488; }
         .btn-read:hover { background: #99f6e4; }
         .btn-delete { background: #fee2e2; color: #dc2626; }
         .btn-delete:hover { background: #fecaca; }
+        .btn-secondary { background: #f1f5f9; color: #334155; border: 1px solid #d1e7e7; }
+        .btn-secondary:hover { background: #e2e8f0; }
         .pagination { display: flex; gap: 0.5rem; justify-content: center; padding: 1rem; }
         .pagination a { padding: 0.5rem 1rem; background: white; border-radius: 0.5rem; text-decoration: none; color: #1B6B6E; font-size: 0.875rem; border: 1px solid #d1e7e7; }
         .pagination a.active { background: #1B6B6E; color: white; }
         .msg-preview { max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .success { background: #f0fdf4; color: #16a34a; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.875rem; }
         .error-msg { background: #fef2f2; color: #dc2626; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.875rem; }
-        .form-inline { display: flex; gap: 0.5rem; align-items: end; flex-wrap: wrap; padding: 1.5rem; }
-        .form-inline label { font-size: 0.875rem; font-weight: 600; display: block; margin-bottom: 0.25rem; }
-        .form-inline input { padding: 0.5rem 0.75rem; border: 1px solid #d1e7e7; border-radius: 0.5rem; font-size: 0.875rem; }
-        .form-inline button { background: #1B6B6E; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+        .warning-msg { background: #fffbeb; color: #b45309; padding: 0.75rem 1rem; font-size: 0.875rem; border-bottom: 1px solid #e2e8f0; }
+        .form-inline { display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap; padding: 1.5rem; }
+        .form-inline label { font-size: 0.875rem; font-weight: 600; display: block; margin-bottom: 0.3rem; color: #334155; }
+        .form-inline input[type="text"],
+        .form-inline input[type="password"] { padding: 0.5rem 0.75rem; border: 1px solid #d1e7e7; border-radius: 0.5rem; font-size: 0.875rem; outline: none; }
+        .form-inline input:focus { border-color: #1B6B6E; box-shadow: 0 0 0 2px rgb(27 107 110 / 0.1); }
+        .form-inline button[type="submit"] { background: #1B6B6E; color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+        .form-inline button[type="submit"]:hover { background: #2D8A8E; }
+        .ip-code { background: #f1f5f9; color: #334155; padding: 0.2rem 0.5rem; border-radius: 0.35rem; font-size: 0.85rem; font-family: monospace; }
+        .section-msg { padding: 0 1.5rem; }
         @media (max-width: 768px) {
             table, thead, tbody, th, td, tr { display: block; }
             thead { display: none; }
@@ -229,6 +285,12 @@ $motivos = [
         <?php if (isset($passError)): ?>
             <div class="error-msg"><?= htmlspecialchars($passError) ?></div>
         <?php endif; ?>
+        <?php if (isset($ipMsg)): ?>
+            <div class="success"><?= htmlspecialchars($ipMsg) ?></div>
+        <?php endif; ?>
+        <?php if (isset($ipError)): ?>
+            <div class="error-msg"><?= htmlspecialchars($ipError) ?></div>
+        <?php endif; ?>
 
         <!-- Estadísticas -->
         <div class="stats">
@@ -244,9 +306,13 @@ $motivos = [
                 <div class="number" style="font-size:1.5rem;">🍪</div>
                 <div class="label">Cookies RGPD</div>
             </div>
+            <div class="stat-card" style="cursor:pointer;" onclick="document.getElementById('ips').scrollIntoView({behavior:'smooth'})">
+                <div class="number" style="font-size:1.5rem; color:<?= empty($allowedIPs) ? '#b45309' : '#1B6B6E' ?>;"><?= count($allowedIPs) ?></div>
+                <div class="label">IPs permitidas<?= empty($allowedIPs) ? ' ⚠' : '' ?></div>
+            </div>
         </div>
 
-        <!-- Mensajes -->
+        <!-- Mensajes de contacto -->
         <div class="card">
             <div class="card-header">Mensajes de contacto</div>
             <?php if (empty($mensajes)): ?>
@@ -307,18 +373,95 @@ $motivos = [
             <?php endif; ?>
         </div>
 
+        <!-- Gestión de IPs permitidas -->
+        <div class="card" id="ips">
+            <div class="card-header">Control de acceso por IP</div>
+
+            <?php if (empty($allowedIPs)): ?>
+                <div class="warning-msg">
+                    ⚠ Sin restricción de IP activa. El panel es accesible desde cualquier IP. Añade al menos una IP para activar la protección.
+                </div>
+            <?php else: ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dirección IP</th>
+                            <th>Descripción</th>
+                            <th>Fecha de alta</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($allowedIPs as $ip): ?>
+                            <tr>
+                                <td>
+                                    <span class="ip-code"><?= htmlspecialchars($ip['ip_address']) ?></span>
+                                    <?php if ($ip['ip_address'] === $clientIPCurrent): ?>
+                                        <span class="badge badge-current" style="margin-left:0.5rem;">Tu IP actual</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td style="color:#64748b;"><?= htmlspecialchars($ip['descripcion'] ?: '—') ?></td>
+                                <td style="color:#94a3b8; font-size:0.8rem;"><?= date('d/m/Y H:i', strtotime($ip['created_at'])) ?></td>
+                                <td>
+                                    <a href="/admin/?action=delete_ip&id=<?= $ip['id'] ?>"
+                                       class="btn btn-delete"
+                                       onclick="return confirm('¿Eliminar la IP <?= htmlspecialchars($ip['ip_address']) ?>?\n\n<?= $ip['ip_address'] === $clientIPCurrent ? 'ATENCIÓN: Es tu IP actual. Perderás el acceso al panel si no hay otras IPs permitidas.' : '¿Seguro que deseas eliminarla?' ?>')">
+                                        Eliminar
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+
+            <!-- Formulario añadir IP -->
+            <form method="POST" class="form-inline" style="border-top: 1px solid #e2e8f0;">
+                <input type="hidden" name="add_ip" value="1">
+                <div>
+                    <label for="ip_address">Dirección IP</label>
+                    <input type="text" id="ip_address" name="ip_address"
+                           value="<?= htmlspecialchars($clientIPCurrent) ?>"
+                           style="width:200px;" maxlength="45">
+                </div>
+                <div>
+                    <label for="ip_descripcion">Descripción (opcional)</label>
+                    <input type="text" id="ip_descripcion" name="ip_descripcion"
+                           placeholder="Ej: Oficina, Casa..." style="width:220px;" maxlength="255">
+                </div>
+                <button type="submit">Añadir IP</button>
+                <button type="button" class="btn btn-secondary"
+                        onclick="document.getElementById('ip_address').value='<?= htmlspecialchars($clientIPCurrent) ?>'">
+                    Usar mi IP actual (<?= htmlspecialchars($clientIPCurrent) ?>)
+                </button>
+            </form>
+        </div>
+
         <!-- Cambiar contraseña -->
         <div class="card">
             <div class="card-header">Cambiar contraseña</div>
             <form method="POST" class="form-inline">
                 <input type="hidden" name="change_password" value="1">
                 <div>
-                    <label for="new_password">Nueva contraseña</label>
-                    <input type="password" id="new_password" name="new_password" required minlength="8" placeholder="Mínimo 8 caracteres">
+                    <label for="current_password">Contraseña actual</label>
+                    <input type="password" id="current_password" name="current_password"
+                           required autocomplete="current-password" style="width:200px;">
                 </div>
-                <button type="submit">Actualizar</button>
+                <div>
+                    <label for="new_password">Nueva contraseña</label>
+                    <input type="password" id="new_password" name="new_password"
+                           required minlength="8" placeholder="Mínimo 8 caracteres"
+                           autocomplete="new-password" style="width:220px;">
+                </div>
+                <div>
+                    <label for="confirm_password">Confirmar nueva contraseña</label>
+                    <input type="password" id="confirm_password" name="confirm_password"
+                           required minlength="8" autocomplete="new-password" style="width:220px;">
+                </div>
+                <button type="submit">Actualizar contraseña</button>
             </form>
         </div>
+
     </div>
 </body>
 </html>

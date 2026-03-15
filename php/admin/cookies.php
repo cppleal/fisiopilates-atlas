@@ -6,14 +6,18 @@
 
 session_start();
 require_once __DIR__ . '/../api/config.php';
+require_once __DIR__ . '/ip-check.php';
 require_once __DIR__ . '/../api/cookies/CookieConsentService.php';
+
+$pdo = getDB();
+
+// Verificación de IP permitida
+checkAdminIP($pdo);
 
 if (!isset($_SESSION['admin_id'])) {
     header('Location: /admin/');
     exit;
 }
-
-$pdo = getDB();
 $cookieService = new CookieConsentService($pdo);
 
 // Exportar CSV

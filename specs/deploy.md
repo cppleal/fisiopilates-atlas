@@ -10,12 +10,13 @@
 | FTP host | `40749769.servicio-online.net` |
 | FTP puerto | `21` (SFTP/22 bloqueado en Hostalia) |
 | FTP usuario | `user-10067489` |
+| FTP ruta remota | `/httpdocs` |
 | DB host | `PMYSQL168.dns-servicio.com` |
 | DB nombre | `10067489_fisiopilates_TEST` |
 | DB usuario | `cppleal_fisiopilates` |
 | Admin URL | `https://40749769.servicio-online.net/admin/` |
 
-### PRODUCCIÓN (⚠️ Joomla legacy activo)
+### PRODUCCIÓN (web nueva activa desde 2026-03-15)
 
 | Parámetro | Valor |
 |-----------|-------|
@@ -23,90 +24,69 @@
 | FTP host | `40546259.servicio-online.net` |
 | FTP puerto | `21` |
 | FTP usuario | `user-9702349` |
+| FTP ruta remota | `/fisiopilatesatlas.es` |
 | DB host | `PMYSQL117.dns-servicio.com` |
 | DB nombre | `9702349_fisio` |
-| Estado | **Joomla activo — NO SOBREESCRIBIR sin autorización** |
+| DB usuario | `cppleal-fisio` |
+| Admin URL | `https://fisiopilatesatlas.es/admin/` |
 
+> **Nota:** El Joomla legacy fue eliminado el 2026-03-15. La web nueva Astro está activa en producción.
 > **Regla crítica:** NUNCA hacer deploy a PROD sin permiso explícito del usuario.
 
 ---
 
-## Método principal de deploy: WinSCP (.bat)
-
-### Deploy TEST completo
-```bat
-deploy\deploy-local.bat test
-```
-
-### Deploy TEST parcial (archivos específicos)
-```bat
-deploy\deploy-local.bat test index.html
-deploy\deploy-local.bat test api/contacto.php admin/cookies.php
-```
-
-### Deploy PROD (requiere confirmación explícita)
-```bat
-deploy\deploy-local.bat prod
-```
-
-### Descargar imágenes de PROD
-```bat
-deploy\get-prod-images.bat
-```
-> Descarga imágenes del Joomla legacy a `public/images/`
-
-### Archivos del método WinSCP
-| Archivo | Descripción |
-|---------|-------------|
-| `deploy\deploy-local.bat` | Script principal de deploy |
-| `deploy\deploy-config.bat` | Credenciales reales (no en git) |
-| `deploy\deploy-config.template.bat` | Plantilla sin credenciales (en git) |
-| `deploy\get-prod-images.bat` | Descarga imágenes PROD |
-
----
-
-## Método alternativo: Node.js (`scripts/deploy.mjs`)
+## Método principal de deploy: Node.js (`scripts/deploy.mjs`)
 
 ```bash
-# Deploy TEST completo
-node scripts/deploy.mjs
+# Deploy TEST completo (build + subida)
+npm run build && node scripts/deploy.mjs
 
-# Deploy TEST parcial
-node scripts/deploy.mjs test index.html api/contacto.php
-
-# Deploy PROD (espera 10 segundos, Ctrl+C para cancelar)
+# Deploy PROD (requiere permiso explícito — espera 10 segundos, Ctrl+C para cancelar)
 node scripts/deploy.mjs prod
 
 # Deploy con install.php (primer deploy en nuevo entorno)
 node scripts/deploy.mjs --install
 ```
 
-### Archivos que sube el script Node en deploy completo
+### Archivos que sube el script en deploy completo
 
-**Estáticos (dist/):**
-- Todo el contenido del directorio `dist/` (generado por Astro)
+**Estáticos (`dist/`):**
+- Todo el contenido generado por Astro, incluyendo `.htaccess`
 
 **PHP Backend:**
 ```
-php/config.php                      → /api/config.php
-php/contacto.php                    → /api/contacto.php
-php/lib/SmtpMailer.php              → /api/lib/SmtpMailer.php
-php/admin/index.php                 → /admin/index.php
-php/admin/cookies.php               → /admin/cookies.php
-php/cookies/log-consent.php        → /api/cookies/log-consent.php
+php/config.php                       → /api/config.php
+php/contacto.php                     → /api/contacto.php
+php/lib/SmtpMailer.php               → /api/lib/SmtpMailer.php
+php/admin/index.php                  → /admin/index.php
+php/admin/cookies.php                → /admin/cookies.php
+php/admin/ip-check.php               → /admin/ip-check.php
+php/cookies/log-consent.php          → /api/cookies/log-consent.php
 php/cookies/CookieConsentService.php → /api/cookies/CookieConsentService.php
 ```
 
 **Condicional:**
 ```
-php/install.php   → /install.php   (solo con --install)
+php/install.php → /install.php   (solo con --install)
 ```
 
 ---
 
-## Proceso de deploy paso a paso
+## Método alternativo: WinSCP (.bat)
 
-### Deploy habitual (cambios frontend o PHP)
+```bat
+REM Deploy TEST completo
+deploy\deploy-local.bat test
+
+REM Deploy TEST parcial (archivos específicos desde dist/)
+deploy\deploy-local.bat test index.html api/contacto.php
+```
+
+> Nota: el método .bat solo sube archivos desde `dist/`. Para PHP hay que usar `deploy.mjs`.
+
+---
+
+## Proceso de deploy habitual (cambios frontend o PHP)
 
 ```bash
 # 1. Generar estáticos
@@ -114,13 +94,17 @@ npm run build
 
 # 2. Deploy a TEST
 node scripts/deploy.mjs
-# o: deploy\deploy-local.bat test
 
 # 3. Verificar en navegador
 # https://40749769.servicio-online.net
+
+# 4. Con permiso del usuario → deploy a PROD
+node scripts/deploy.mjs prod
 ```
 
-### Primer deploy en nuevo entorno
+---
+
+## Primer deploy en un entorno nuevo
 
 ```bash
 # 1. Build
@@ -131,8 +115,14 @@ node scripts/deploy.mjs --install
 
 # 3. Ejecutar en el navegador:
 # https://dominio/install.php
+# → Crea las 4 tablas y registra la IP del instalador
 
-# 4. ¡IMPORTANTE! Borrar install.php del servidor inmediatamente
+# 4. ¡IMPORTANTE! El install.php se auto-elimina tras ejecutarse
+# (o borrarlo manualmente del servidor)
+
+# 5. Entrar al panel admin y:
+#    a) Cambiar contraseña (atlas2025 → nueva)
+#    b) Verificar IPs permitidas
 ```
 
 ---
@@ -140,7 +130,7 @@ node scripts/deploy.mjs --install
 ## Estructura remota del servidor
 
 ```
-/httpdocs/                  (raíz TEST)
+/httpdocs/                  (raíz TEST) | /fisiopilatesatlas.es/ (raíz PROD)
 ├── index.html              ← Astro static
 ├── fisioterapia.html
 ├── pilates.html
@@ -149,15 +139,15 @@ node scripts/deploy.mjs --install
 ├── privacidad.html
 ├── cookies.html
 ├── 404.html
-├── .htaccess
+├── .htaccess               ← Clean URLs + caché + ErrorDocument 404
 ├── _astro/                 ← CSS/JS bundles Astro
-├── images/                 ← Imágenes
+├── images/                 ← Imágenes del sitio
 ├── css/
 │   └── cookie-consent.css
 ├── js/
 │   └── cookie-consent.js
 ├── api/
-│   ├── config.php
+│   ├── config.php          ← Auto-detecta entorno por hostname
 │   ├── contacto.php
 │   ├── lib/
 │   │   └── SmtpMailer.php
@@ -166,14 +156,56 @@ node scripts/deploy.mjs --install
 │       └── CookieConsentService.php
 └── admin/
     ├── index.php
-    └── cookies.php
+    ├── cookies.php
+    └── ip-check.php        ← Protección acceso por IP
 ```
+
+---
+
+## `.htaccess` (generado en `public/.htaccess`)
+
+```apache
+Options -Indexes
+DirectoryIndex index.html index.php
+
+RewriteEngine On
+
+# Servir directamente si el fichero o directorio existe
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Clean URLs: /pilates → /pilates.html
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.+?)/?$ /$1.html [L]
+
+ErrorDocument 404 /404.html
+```
+
+---
+
+## Backup de base de datos
+
+Los backups se realizan mediante PHP CLI directamente contra la BD (sin mysqldump).
+
+```bash
+# Ejecutar script de backup (genera SQL en backup/prod/ y backup/test/)
+php backup/do-backup.php
+```
+
+Los ficheros se guardan como:
+```
+backup/prod/backup_prod_YYYY-MM-DD_HHmmss.sql
+backup/test/backup_test_YYYY-MM-DD_HHmmss.sql
+```
+
+> Las carpetas `backup/test/` y `backup/prod/` están en `.gitignore`.
 
 ---
 
 ## Variables de entorno (`.env`)
 
-Credenciales sensibles gestionadas en `.env` (nunca en git):
+Credenciales sensibles en `.env` (nunca en git):
 
 ```env
 FTP_HOST_TEST=40749769.servicio-online.net
@@ -185,9 +217,9 @@ SFTP_HOST_PROD=40546259.servicio-online.net
 SFTP_USER_PROD=user-9702349
 SFTP_REMOTE_DIR_PROD=/fisiopilatesatlas.es
 
-DB_HOST=PMYSQL168.dns-servicio.com
-DB_NAME=10067489_fisiopilates_TEST
-DB_USER=cppleal_fisiopilates
+DB_HOST=...
+DB_NAME=...
+DB_USER=...
 DB_PASS=...
 ```
 
@@ -196,33 +228,10 @@ DB_PASS=...
 ## Notas importantes de Hostalia
 
 - **SFTP (puerto 22) BLOQUEADO** en ambos servidores → usar siempre FTP (21)
-- **`.htaccess`:** No añadir `RewriteRule` explícitas para archivos PHP → causa bucle infinito (500 error)
-  - ✅ Correcto: `RewriteCond %{REQUEST_FILENAME} -f [OR] -d` → pasa archivos existentes tal cual
-  - ❌ Incorrecto: `RewriteRule ^api/contacto\.php$ /api/contacto.php [L]` → loop infinito
-- **`CREATE TABLE IF NOT EXISTS`** no actualiza tablas existentes con esquema diferente → usar `DROP TABLE` + recrear si el esquema cambia
-
----
-
-## Backup de base de datos
-
-Script PHP que genera un volcado SQL por entorno (TEST/PROD).
-
-```bat
-REM Backup de TEST para una versión concreta
-backup\backup.bat test v1.1.0
-
-REM Backup de ambos entornos
-backup\backup.bat all v1.1.0
-```
-
-### Ficheros generados
-```
-backup/test/v1.1.0/
-  estructura.sql   ← solo CREATE TABLE
-  completo.sql     ← estructura + datos (INSERTs en bloques de 100)
-```
-
-> Las carpetas `backup/test/` y `backup/prod/` están en `.gitignore` (no se suben al repositorio).
+- **`CREATE TABLE IF NOT EXISTS`** no actualiza tablas con esquema diferente → usar `ALTER TABLE` si el esquema cambia
+- **`.htaccess`:** No añadir `RewriteRule` para archivos PHP → causa bucle 500
+  - ✅ `RewriteCond %{REQUEST_FILENAME} -f [OR] -d` → pasa archivos existentes tal cual
+  - ❌ `RewriteRule ^api/contacto\.php$` → loop infinito
 
 ---
 
@@ -235,31 +244,21 @@ backup/test/v1.1.0/
 ### Ficheros excluidos del repositorio (`.gitignore`)
 | Fichero/Carpeta | Motivo |
 |-----------------|--------|
-| `node_modules/` | Dependencias (se regeneran con `npm install`) |
-| `dist/` | Build output (se regenera con `npm run build`) |
+| `node_modules/` | Dependencias |
+| `dist/` | Build output |
 | `.env` | Credenciales FTP y BD |
 | `deploy/deploy-config.bat` | Credenciales FTP reales |
-| `php/config.php` | Credenciales BD, SMTP y hCaptcha reales |
 | `backup/test/` | Volcados SQL de TEST |
 | `backup/prod/` | Volcados SQL de PROD |
-
-### Plantillas en git
-- `deploy/deploy-config.template.bat` → copiar como `deploy-config.bat` y rellenar
-- `php/config.template.php` → copiar como `php/config.php` y rellenar
 
 ---
 
 ## Procedimiento de creación de versión
 
-Ejecutar cuando el usuario lo indique explícitamente. **Nunca automáticamente.**
+Ejecutar **solo cuando el usuario lo indique explícitamente**.
 
-### Script automatizado
-```bat
-crear-version.bat X.Y.Z descripcion_breve
-```
-
-### Pasos manuales (cuando Claude gestiona la versión)
-1. `backup\backup.bat test vX.Y.Z` — backup BD TEST
+### Pasos
+1. Backup BD: `php backup/do-backup.php`
 2. Actualizar specs afectadas en `specs/`
 3. Crear `versiones/vX.Y.Z-desc/changelog.md`
 4. Actualizar fichero `VERSION`
@@ -269,16 +268,17 @@ crear-version.bat X.Y.Z descripcion_breve
 | Tipo | Cuándo |
 |------|--------|
 | PATCH (X.Y.**Z**) | Correcciones, ajustes menores |
-| MINOR (X.**Y**.0) | Nueva página, nueva funcionalidad |
+| MINOR (X.**Y**.0) | Nueva funcionalidad, nuevo contenido significativo |
 | MAJOR (**X**.0.0) | Rediseño completo, cambio de arquitectura |
 
 ---
 
-## Versionado
+## Historial de versiones
 
 | Versión | Fecha | Descripción |
 |---------|-------|-------------|
 | `0.0.1` | 2026-02 | Scaffolding inicial |
 | `1.0.0` | 2026-03-06 | Primera versión completa: 8 páginas, contacto, admin, cookies RGPD |
 | `1.1.0` | 2026-03-07 | Sistema de backup BD, repositorio GitHub y procedimiento de versionado |
-| `1.2.0` | 2026-03-08 | Logo real en la cabecera (portada_v02.jpg, mix-blend-mode screen) |
+| `1.2.0` | 2026-03-08 | Logo real en la cabecera |
+| `1.3.0` | 2026-03-15 | Protección admin por IP, primer deploy a producción, galería instalaciones |

@@ -9,7 +9,7 @@
 | Backend | PHP | 8.x |
 | Base de datos | MySQL | 5.7+ / 8.x |
 | Servidor web | Apache + mod_rewrite | Hostalia |
-| Deploy | FTP (basic-ftp / WinSCP) | Puerto 21 |
+| Deploy | FTP (basic-ftp Node.js / WinSCP) | Puerto 21 |
 
 > El sitio genera HTML estático en `dist/`. PHP solo existe para el formulario de contacto, el panel admin y el registro de cookies.
 
@@ -31,32 +31,40 @@ new_fisio/
 │   └── styles/
 │       └── global.css  → Variables CSS + Tailwind
 ├── php/
-│   ├── config.php          → Configuración BD, SMTP, hCaptcha
+│   ├── config.php          → Configuración BD/SMTP/hCaptcha (auto-detecta entorno)
 │   ├── contacto.php        → API formulario de contacto
 │   ├── install.php         → Script creación tablas (ejecutar 1 vez, luego borrar)
 │   ├── lib/
 │   │   └── SmtpMailer.php  → Clase envío SMTP nativo
 │   ├── admin/
-│   │   ├── index.php       → Panel de administración (login + dashboard)
-│   │   └── cookies.php     → Vista registros cookie consent
+│   │   ├── index.php       → Panel admin (login + dashboard + IPs + contraseña)
+│   │   ├── cookies.php     → Vista registros cookie consent
+│   │   └── ip-check.php    → Protección acceso por IP
 │   └── cookies/
 │       ├── log-consent.php         → API endpoint registro consentimiento
 │       └── CookieConsentService.php → Servicio RGPD (lógica de negocio)
 ├── public/
-│   ├── .htaccess           → Apache: HTTPS, www→sin www, routing, cache, compresión
+│   ├── .htaccess           → Clean URLs, caché, ErrorDocument 404
 │   ├── images/             → Imágenes del sitio (JPG, WebP)
 │   ├── css/
-│   │   └── cookie-consent.css → Estilos del banner de cookies
+│   │   └── cookie-consent.css
 │   └── js/
-│       └── cookie-consent.js  → Lógica del banner de cookies
+│       └── cookie-consent.js
+├── images/                 → Imágenes originales de alta calidad (no en git)
 ├── scripts/
-│   └── deploy.mjs          → Deploy FTP alternativo (Node.js)
-├── deploy/                 → Scripts WinSCP (.bat) — método principal
+│   └── deploy.mjs          → Deploy FTP (Node.js) — método principal
+├── deploy/                 → Scripts WinSCP (.bat) — método alternativo
 │   ├── deploy-local.bat
 │   ├── deploy-config.bat   → Credenciales reales (no en git)
 │   └── get-prod-images.bat
-├── specs/                  → Esta documentación
-├── package.json            → v1.0.0
+├── backup/                 → Scripts y volcados de BD
+│   ├── backup/             → Scripts de backup PHP
+│   ├── test/               → Volcados TEST (no en git)
+│   └── prod/               → Volcados PROD (no en git)
+├── specs/                  → Esta documentación técnica
+├── versiones/              → Changelogs por versión
+├── VERSION                 → Versión actual (formato X.Y.Z)
+├── package.json
 └── astro.config.mjs
 ```
 
@@ -91,25 +99,23 @@ new_fisio/
 
 ### `Footer.astro`
 - 3 columnas: info contacto | navegación | redes sociales
-- Tel: 691 487 526
-- Email: fisiopilates.atlas@gmail.com
-- Redes: Facebook, WhatsApp, Twitter (@ClinicaAtlas)
-- Dirección: c/Travesía de Alfredo Aleix, 1 — Junto al banco La Caixa · Carabanchel Alto, 28044 Madrid
+- Tel: 691 487 526 | Email: fisiopilates.atlas@gmail.com
+- Dirección: c/Travesía de Alfredo Aleix, 1 — Carabanchel Alto, 28044 Madrid
 
 ### `Hero.astro`
-- Props: `title`, `subtitle`, `ctaText`, `ctaHref`, `ctaSecondaryText`, `ctaSecondaryHref`, `backgroundImage`
+- Props: `title`, `subtitle`, `ctaText`, `ctaHref`, `ctaSecondaryText`, `ctaSecondaryHref`, `backgroundImage`, `compact`
 - Fondo imagen con overlay oscuro
-- 2 botones CTA
+- Prop `compact` para hero reducido (páginas interiores)
 
 ### `SectionTitle.astro`
-- Props: `title`, `subtitle`
-- Centrado, con línea decorativa color primary
+- Props: `title`, `subtitle`, `centered`
+- Con línea decorativa color primary
 
 ---
 
 ## Routing (Astro static + Apache)
 
-Astro genera archivos `.html`. Apache mapea rutas sin extensión:
+Astro genera archivos `.html`. El `.htaccess` mapea rutas limpias:
 
 ```
 /                   → /index.html
@@ -120,17 +126,10 @@ Astro genera archivos `.html`. Apache mapea rutas sin extensión:
 /privacidad         → /privacidad.html
 /cookies            → /cookies.html
 /404                → /404.html
-/api/contacto.php   → PHP directo (archivo existente, pasa por -f)
+/api/contacto.php   → PHP directo
 /api/cookies/log-consent.php → PHP directo
 /admin/             → /admin/index.php
 /admin/cookies.php  → PHP directo
-```
-
-Regla clave `.htaccess` (evita loops):
-```apache
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
 ```
 
 ---
@@ -140,5 +139,5 @@ RewriteRule ^ - [L]
 - Componentes Astro: PascalCase (`Header.astro`)
 - PHP: camelCase para métodos, PascalCase para clases
 - CSS: Tailwind utilities + variables CSS personalizadas en `global.css`
-- Imágenes: preferir WebP (compresión con Sharp, ~80% reducción)
-- Sin git en este proyecto (no es repositorio)
+- Imágenes: preferir WebP donde sea posible
+- Commits: `[feature_slug] - descripción en español`

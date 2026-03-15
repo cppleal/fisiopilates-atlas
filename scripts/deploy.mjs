@@ -113,6 +113,7 @@ try {
     await client.uploadFrom(join(ROOT, 'php/lib/SmtpMailer.php'),              `${env.remoteDir}/api/lib/SmtpMailer.php`);
     await client.uploadFrom(join(ROOT, 'php/admin/index.php'),                 `${env.remoteDir}/admin/index.php`);
     await client.uploadFrom(join(ROOT, 'php/admin/cookies.php'),               `${env.remoteDir}/admin/cookies.php`);
+    await client.uploadFrom(join(ROOT, 'php/admin/ip-check.php'),              `${env.remoteDir}/admin/ip-check.php`);
 
     // Cookie consent backend (RGPD)
     try { await client.ensureDir(`${env.remoteDir}/api/cookies`); } catch {}
