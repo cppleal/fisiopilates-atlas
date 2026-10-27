@@ -4,6 +4,7 @@
  *   node scripts/deploy.mjs           → TEST (FTP puerto 21)
  *   node scripts/deploy.mjs prod      → PRODUCCIÓN ← REQUIERE confirmación
  *   node scripts/deploy.mjs test file → Sube un archivo específico a TEST
+ *   node scripts/deploy.mjs prod file → Sube un archivo específico a PROD ← REQUIERE confirmación
  *
  * Ejemplos subida parcial:
  *   node scripts/deploy.mjs test index.html
@@ -22,15 +23,15 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = join(__dirname, '..');
 
 const isProd = process.argv[2] === 'prod';
-const specificFiles = process.argv.slice(isProd ? 3 : 3); // archivos específicos si los hay
-const isPartial = !isProd && process.argv[2] === 'test' && specificFiles.length > 0;
+const specificFiles = process.argv.slice(3); // archivos específicos si los hay
+const isPartial = (isProd || process.argv[2] === 'test') && specificFiles.length > 0;
 
 // Configuración de entornos
 const ENV = {
   test: {
     host: process.env.FTP_HOST_TEST || '40749769.servicio-online.net',
     user: process.env.FTP_USER_TEST || 'user-10067489',
-    pass: process.env.FTP_PASS_TEST || 'C2@4AVSt#MneBHVw',
+    pass: process.env.FTP_PASS_TEST,
     remoteDir: process.env.FTP_REMOTE_DIR_TEST || '/httpdocs',
     label: 'TEST',
     url: 'https://40749769.servicio-online.net',
@@ -38,10 +39,10 @@ const ENV = {
     port: 21,
   },
   prod: {
-    host: process.env.SFTP_HOST_PROD || '40546259.servicio-online.net',
-    user: process.env.SFTP_USER_PROD || 'user-9702349',
-    pass: process.env.SFTP_PASS_PROD || '',
-    remoteDir: process.env.SFTP_REMOTE_DIR_PROD || '/fisiopilatesatlas.es',
+    host: process.env.FTP_HOST_PROD || '40546259.servicio-online.net',
+    user: process.env.FTP_USER_PROD || 'user-9702349',
+    pass: process.env.FTP_PASS_PROD,
+    remoteDir: process.env.FTP_REMOTE_DIR_PROD || '/fisiopilatesatlas.es',
     label: 'PRODUCCIÓN',
     url: 'https://fisiopilatesatlas.es',
     secure: false,
