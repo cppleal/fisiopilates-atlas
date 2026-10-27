@@ -209,4 +209,3 @@ git push
 ## Pendiente / TODO
 - [ ] Configurar hCaptcha (reemplazar YOUR_HCAPTCHA_SITE_KEY en contacto.astro y config.php)
 - [ ] Configurar SMTP en php/config.php
-- [ ] Actualizar tarifas reales en precios.astro
