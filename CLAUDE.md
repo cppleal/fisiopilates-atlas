@@ -205,7 +205,3 @@ git push
 - BD: 10067489_fisiopilates_TEST
 - Usuario: cppleal_fisiopilates
 - Credenciales en `.env` y en `php/config.php` (vía getenv)
-
-## Pendiente / TODO
-- [ ] Configurar hCaptcha (reemplazar YOUR_HCAPTCHA_SITE_KEY en contacto.astro y config.php)
-- [ ] Configurar SMTP en php/config.php
