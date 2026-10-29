@@ -70,6 +70,7 @@ Las variables de entorno (`DB_HOST`, `DB_NAME`, etc.) tienen prioridad sobre la 
 **Archivo:** `php/cookies/log-consent.php`
 **URL desplegada:** `/api/cookies/log-consent.php`
 **Método:** `POST`
+**CORS:** solo responde `Access-Control-Allow-Origin` a los orígenes propios (`https://fisiopilatesatlas.es`, `https://www.fisiopilatesatlas.es` y TEST `https://40749769.servicio-online.net`), sin `*` ni `Allow-Credentials`; el banner lo llama same-origin.
 
 ### Payload JSON esperado
 ```json
