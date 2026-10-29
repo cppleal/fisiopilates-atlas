@@ -62,6 +62,7 @@ $periodLabels = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'">
     <title>Cookies RGPD — Admin Fisiopilates Atlas</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -171,7 +172,7 @@ $periodLabels = [
         <div class="filters-row">
             <div class="filter-group" style="max-width:250px;">
                 <label>Período de estadísticas</label>
-                <select onchange="window.location.href='?period='+this.value">
+                <select data-nav-param="period">
                     <?php foreach ($periodLabels as $key => $label): ?>
                         <option value="<?= $key ?>" <?= $period === $key ? 'selected' : '' ?>><?= $label ?></option>
                     <?php endforeach; ?>
@@ -319,5 +320,6 @@ $periodLabels = [
         <?php endif; ?>
     </div>
 </div>
+<script src="/js/admin.js" defer></script>
 </body>
 </html>

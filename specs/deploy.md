@@ -180,7 +180,18 @@ RewriteCond %{REQUEST_FILENAME}.html -f
 RewriteRule ^(.+?)/?$ /$1.html [L]
 
 ErrorDocument 404 /404.html
+
+# (aquí va la caché de assets con mod_expires)
+
+<IfModule mod_headers.c>
+  Header always set Content-Security-Policy "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
 ```
+
+`npm run build` acaba con `scripts/check-csp.mjs`: si falla, el build falla y no se despliega (ver `arquitectura.md`, «Content Security Policy»).
 
 ---
 

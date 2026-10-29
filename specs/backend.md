@@ -172,4 +172,5 @@ Acceso: `https://dominio/install.php` (se sube con flag `--install` en deploy)
 - Password con `password_hash()` / `password_verify()` bcrypt
 - Protección de acceso al admin por IP (`admin_ips`)
 - `.htaccess` con `Options -Indexes` → sin listado de directorios
+- `.htaccess` con cabeceras de seguridad (CSP `frame-ancestors`, nosniff, X-Frame-Options, Referrer-Policy) y CSP por hashes en las páginas (ver `arquitectura.md`)
 - Headers CORS restrictivos en endpoints PHP

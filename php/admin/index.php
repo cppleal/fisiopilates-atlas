@@ -60,6 +60,7 @@ if (!isset($_SESSION['admin_id'])) {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'">
         <title>Admin - Fisiopilates Atlas</title>
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -204,6 +205,7 @@ $motivos = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'">
     <title>Admin - Fisiopilates Atlas</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -302,11 +304,11 @@ $motivos = [
                 <div class="number"><?= $noLeidos ?></div>
                 <div class="label">Sin leer</div>
             </div>
-            <div class="stat-card" style="cursor:pointer;" onclick="window.location='/admin/cookies.php'">
+            <div class="stat-card" style="cursor:pointer;" data-href="/admin/cookies.php">
                 <div class="number" style="font-size:1.5rem;">🍪</div>
                 <div class="label">Cookies RGPD</div>
             </div>
-            <div class="stat-card" style="cursor:pointer;" onclick="document.getElementById('ips').scrollIntoView({behavior:'smooth'})">
+            <div class="stat-card" style="cursor:pointer;" data-scroll-to="ips">
                 <div class="number" style="font-size:1.5rem; color:<?= empty($allowedIPs) ? '#b45309' : '#1B6B6E' ?>;"><?= count($allowedIPs) ?></div>
                 <div class="label">IPs permitidas<?= empty($allowedIPs) ? ' ⚠' : '' ?></div>
             </div>
@@ -356,7 +358,7 @@ $motivos = [
                                     <?php if (!$msg['leido']): ?>
                                         <a href="/admin/?action=read&id=<?= $msg['id'] ?>" class="btn btn-read">Marcar leído</a>
                                     <?php endif; ?>
-                                    <a href="/admin/?action=delete&id=<?= $msg['id'] ?>" class="btn btn-delete" onclick="return confirm('¿Eliminar este mensaje?')">Eliminar</a>
+                                    <a href="/admin/?action=delete&id=<?= $msg['id'] ?>" class="btn btn-delete" data-confirm="¿Eliminar este mensaje?">Eliminar</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -405,7 +407,7 @@ $motivos = [
                                 <td>
                                     <a href="/admin/?action=delete_ip&id=<?= $ip['id'] ?>"
                                        class="btn btn-delete"
-                                       onclick="return confirm('¿Eliminar la IP <?= htmlspecialchars($ip['ip_address']) ?>?\n\n<?= $ip['ip_address'] === $clientIPCurrent ? 'ATENCIÓN: Es tu IP actual. Perderás el acceso al panel si no hay otras IPs permitidas.' : '¿Seguro que deseas eliminarla?' ?>')">
+                                       data-confirm="<?= htmlspecialchars('¿Eliminar la IP ' . $ip['ip_address'] . "?\n\n" . ($ip['ip_address'] === $clientIPCurrent ? 'ATENCIÓN: Es tu IP actual. Perderás el acceso al panel si no hay otras IPs permitidas.' : '¿Seguro que deseas eliminarla?')) ?>">
                                         Eliminar
                                     </a>
                                 </td>
@@ -431,7 +433,7 @@ $motivos = [
                 </div>
                 <button type="submit">Añadir IP</button>
                 <button type="button" class="btn btn-secondary"
-                        onclick="document.getElementById('ip_address').value='<?= htmlspecialchars($clientIPCurrent) ?>'">
+                        data-fill="ip_address" data-value="<?= htmlspecialchars($clientIPCurrent) ?>">
                     Usar mi IP actual (<?= htmlspecialchars($clientIPCurrent) ?>)
                 </button>
             </form>
@@ -463,5 +465,6 @@ $motivos = [
         </div>
 
     </div>
+<script src="/js/admin.js" defer></script>
 </body>
 </html>

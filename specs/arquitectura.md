@@ -44,15 +44,17 @@ new_fisio/
 │       ├── log-consent.php         → API endpoint registro consentimiento
 │       └── CookieConsentService.php → Servicio RGPD (lógica de negocio)
 ├── public/
-│   ├── .htaccess           → Clean URLs, caché, ErrorDocument 404
+│   ├── .htaccess           → Clean URLs, caché, ErrorDocument 404, cabeceras de seguridad
 │   ├── images/             → Imágenes del sitio (JPG, WebP)
 │   ├── css/
 │   │   └── cookie-consent.css
 │   └── js/
-│       └── cookie-consent.js
+│       ├── cookie-consent.js
+│       └── admin.js        → Acciones del panel admin (sustituye a los onclick=)
 ├── images/                 → Imágenes originales de alta calidad (no en git)
 ├── scripts/
-│   └── deploy.mjs          → Deploy FTP (Node.js) — método principal
+│   ├── deploy.mjs          → Deploy FTP (Node.js) — método principal
+│   └── check-csp.mjs       → Comprueba la CSP de dist/ y del admin (va dentro de npm run build)
 ├── deploy/                 → Scripts WinSCP (.bat) — método alternativo
 │   ├── deploy-local.bat
 │   ├── deploy-config.bat   → Credenciales reales (no en git)
@@ -133,6 +135,18 @@ Astro genera archivos `.html`. El `.htaccess` mapea rutas limpias:
 ```
 
 ---
+
+## Content Security Policy
+
+Sin `'unsafe-inline'` en scripts: un script o un manejador `on*=` que alguien consiga meter en el HTML no se ejecuta.
+
+- **Páginas Astro**: `experimental.csp` de Astro (en `astro.config.mjs`). Cada página lleva un `<meta http-equiv="content-security-policy">` con las huellas SHA-256 de sus scripts y estilos. Al ser una web estática no hay nonce.
+  - Terceros permitidos: hCaptcha (`hcaptcha.com` y `*.hcaptcha.com` en script, style, frame y connect) y el iframe de Google Maps (`maps.google.com` y `www.google.com` en frame-src).
+  - Prohibido en el HTML: atributos `style=""` (usar clases de Tailwind) y manejadores `on*=` (usar `addEventListener` en un `<script>`).
+  - Un tercero nuevo (analítica, vídeo, fuentes externas…) hay que añadirlo en `astro.config.mjs` o lo bloqueará el navegador.
+- **Admin PHP**: cada `<head>` lleva su propio `<meta>` con `script-src 'self'` (solo ficheros) y `style-src 'self' 'unsafe-inline'` (las vistas usan `<style>` y `style=""`). Las acciones van por atributos `data-*` que interpreta `public/js/admin.js`: `data-confirm`, `data-href`, `data-scroll-to`, `data-fill` + `data-value`, `data-nav-param`.
+- **`public/.htaccess`**: cabecera `Content-Security-Policy` solo con lo que el `<meta>` no admite o vale para todo (`frame-ancestors 'self'; object-src 'none'; base-uri 'self'`), más `X-Frame-Options`, `X-Content-Type-Options: nosniff` y `Referrer-Policy: strict-origin-when-cross-origin`. El navegador aplica las dos políticas a la vez, por eso la de la cabecera no lleva `script-src` ni `style-src`.
+- **`scripts/check-csp.mjs`** corre al final de `npm run build` y falla si una página no lleva el `<meta>`, si hay un script o estilo en línea sin huella, un `style=""` o un `on*=`, o un `on*=` o `<script>` en línea en el admin.
 
 ## Convenciones de código
 

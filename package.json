@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/check-csp.mjs",
+    "check:csp": "node scripts/check-csp.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "deploy": "npm run build && node scripts/deploy.mjs",

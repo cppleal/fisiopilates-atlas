@@ -157,3 +157,4 @@ Botón "Descargar CSV" → `cookies_YYYY-MM-DD.csv`
 - Queries con PDO prepared statements (sin SQLi)
 - Cambio de contraseña requiere verificar la contraseña actual
 - Sin exposición de errores de BD al usuario final
+- CSP en un `<meta>` de cada vista (solo scripts de fichero): sin `onclick=` ni `<script>` en línea; las acciones van con `data-*` y `public/js/admin.js` (ver `arquitectura.md`, «Content Security Policy»)
