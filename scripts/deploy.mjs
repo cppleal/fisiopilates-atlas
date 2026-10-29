@@ -5,6 +5,7 @@
  *   node scripts/deploy.mjs prod      → PRODUCCIÓN ← REQUIERE confirmación
  *   node scripts/deploy.mjs test file → Sube un archivo específico a TEST
  *   node scripts/deploy.mjs prod file → Sube un archivo específico a PROD ← REQUIERE confirmación
+ *   --forzar → sube el api/config.php aunque apunte a otra BD que el del servidor
  *
  * Ejemplos subida parcial:
  *   node scripts/deploy.mjs test index.html
@@ -16,6 +17,7 @@ import { existsSync, statSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { config } from 'dotenv';
+import { subirConfig } from './config-servidor.mjs';
 
 config();
 
@@ -109,7 +111,8 @@ try {
     try { await client.ensureDir(`${env.remoteDir}/api/lib`); } catch {}
     try { await client.ensureDir(`${env.remoteDir}/admin`); } catch {}
 
-    await client.uploadFrom(join(ROOT, 'php/config.php'),                      `${env.remoteDir}/api/config.php`);
+    // api/config.php generado con las credenciales de este entorno (scripts/config-servidor.mjs)
+    await subirConfig(client, isProd ? 'prod' : 'test', env.remoteDir, { forzar: process.argv.includes('--forzar') });
     await client.uploadFrom(join(ROOT, 'php/contacto.php'),                    `${env.remoteDir}/api/contacto.php`);
     await client.uploadFrom(join(ROOT, 'php/lib/SmtpMailer.php'),              `${env.remoteDir}/api/lib/SmtpMailer.php`);
     await client.uploadFrom(join(ROOT, 'php/admin/index.php'),                 `${env.remoteDir}/admin/index.php`);

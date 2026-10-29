@@ -31,7 +31,7 @@ new_fisio/
 │   └── styles/
 │       └── global.css  → Variables CSS + Tailwind
 ├── php/
-│   ├── config.php          → Configuración BD/SMTP/hCaptcha (auto-detecta entorno)
+│   ├── config.template.php → Plantilla del api/config.php (lo genera scripts/config-servidor.mjs por entorno)
 │   ├── contacto.php        → API formulario de contacto
 │   ├── install.php         → Script creación tablas (ejecutar 1 vez, luego borrar)
 │   ├── lib/

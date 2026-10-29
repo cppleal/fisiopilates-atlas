@@ -1,24 +1,27 @@
 # Backend PHP — Fisiopilates Atlas
 
-## Archivo de configuración: `php/config.php`
+## Archivo de configuración: `api/config.php` (generado por entorno)
 
 Cargado con `require_once` en todos los endpoints PHP.
 
-### Detección automática de entorno
+No se edita a mano ni es el mismo fichero en los dos servidores:
+`scripts/config-servidor.mjs` lo genera a partir de `php/config.template.php`,
+cambiando cada `{{CLAVE}}` por el valor `CLAVE_TEST` o `CLAVE_PROD` del `.env`
+local. Así **cada servidor lleva solo las credenciales de su entorno** (nada de
+FTP ni de la BD del otro entorno). `scripts/deploy.mjs` lo usa en el despliegue
+completo; para subir solo el config:
 
-`config.php` detecta el entorno por el hostname del servidor:
-
-```php
-$_host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
-$_isProd = (strpos($_host, 'fisiopilatesatlas.es') !== false);
+```bash
+node scripts/config-servidor.mjs test --simular   # baja el del servidor y compara, no sube
+node scripts/config-servidor.mjs test             # sube (copia previa en ../backups/)
+node scripts/config-servidor.mjs prod             # PROD: solo con permiso de César
 ```
 
-| Entorno | Host detectado | BD utilizada |
-|---------|---------------|--------------|
-| PRODUCCIÓN | `fisiopilatesatlas.es` | `PMYSQL117.dns-servicio.com / 9702349_fisio` |
-| TEST | cualquier otro | `PMYSQL168.dns-servicio.com / 10067489_fisiopilates_TEST` |
+Antes de subir guarda el del servidor en `../backups/` (fuera del repo), se para
+si el nuevo apunta a otra BD (salvo `--forzar`) y comprueba la SHA-256 de lo subido.
 
-Las variables de entorno (`DB_HOST`, `DB_NAME`, etc.) tienen prioridad sobre la auto-detección si están definidas.
+> Hasta 2026-10-30 `php/config.php` llevaba las BD de TEST y PROD y elegía por
+> `HTTP_HOST`. Ese fichero local (fuera de git) ya no se sube.
 
 ### Constantes definidas
 
@@ -29,7 +32,7 @@ Las variables de entorno (`DB_HOST`, `DB_NAME`, etc.) tienen prioridad sobre la 
 | `DB_USER` | `cppleal_fisiopilates` | `cppleal-fisio` | Usuario BD |
 | `APP_SECRET` | `atlas_2025_s3cr3t_k3y_*` | igual | Clave sesiones admin |
 | `HCAPTCHA_SITE_KEY` | `1d9426de-...` | igual | Clave pública hCaptcha |
-| `IS_TEST_ENV` | `true` | `false` | Auto-detectado por hostname |
+| `IS_TEST_ENV` | `true` | `false` | Sale de `DB_NAME` (contiene `_TEST`) |
 | `CONTACT_TO` | `cppleal@gmail.com` | `fisiopilates.atlas@gmail.com` | Destinatario contacto |
 | `SMTP_HOST` | `smtp.servidor-correo.net` | igual | Servidor SMTP |
 | `SMTP_PORT` | `587` | igual | Puerto SMTP (STARTTLS) |

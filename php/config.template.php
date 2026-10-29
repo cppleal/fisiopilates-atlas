@@ -1,33 +1,35 @@
 <?php
 /**
- * config.template.php - Plantilla de configuración - Fisiopilates Atlas
+ * config.template.php - Plantilla del api/config.php de cada servidor - Fisiopilates Atlas
  *
- * INSTRUCCIONES:
- *   1. Copiar este fichero como php/config.php
- *   2. Rellenar los valores reales
- *   3. php/config.php NO se sube a git (está en .gitignore)
+ * No se copia a mano: scripts/config-servidor.mjs cambia cada {{CLAVE}} por el
+ * valor CLAVE_TEST o CLAVE_PROD del .env local, según el entorno al que se sube.
+ * Así el config.php de cada servidor lleva solo las credenciales de ese entorno.
+ *
+ *   node scripts/config-servidor.mjs test|prod --simular   compara con el del servidor
+ *   node scripts/deploy.mjs                                 lo genera y lo sube a TEST
  */
 
 // Credenciales de base de datos
-define('DB_HOST', getenv('DB_HOST') ?: 'PMYSQL168.dns-servicio.com');
-define('DB_NAME', getenv('DB_NAME') ?: '10067489_fisiopilates_TEST');
-define('DB_USER', getenv('DB_USER') ?: 'TU_USUARIO_BD');
-define('DB_PASS', getenv('DB_PASS') ?: 'TU_PASSWORD_BD');
+define('DB_HOST', '{{DB_HOST}}');
+define('DB_NAME', '{{DB_NAME}}');
+define('DB_USER', '{{DB_USER}}');
+define('DB_PASS', '{{DB_PASS}}');
 
 // Clave secreta para sesiones admin
-define('APP_SECRET', 'CAMBIA_ESTO_POR_UNA_CLAVE_SEGURA');
+define('APP_SECRET', '{{APP_SECRET}}');
 
 // hCaptcha (https://dashboard.hcaptcha.com)
-define('HCAPTCHA_SITE_KEY', 'TU_SITE_KEY_HCAPTCHA');
-define('HCAPTCHA_SECRET',   'TU_SECRET_HCAPTCHA');
+define('HCAPTCHA_SITE_KEY', '{{HCAPTCHA_SITE_KEY}}');
+define('HCAPTCHA_SECRET',   '{{HCAPTCHA_SECRET}}');
 
 // SMTP
-define('SMTP_HOST',      'smtp.servidor-correo.net');
-define('SMTP_PORT',      587);
-define('SMTP_USER',      'envios@fisiopilatesatlas.es');
-define('SMTP_PASS',      'TU_PASSWORD_SMTP');
-define('SMTP_FROM',      'envios@fisiopilatesatlas.es');
-define('SMTP_FROM_NAME', 'Fisiopilates Atlas');
+define('SMTP_HOST',      '{{SMTP_HOST}}');
+define('SMTP_PORT',      {{SMTP_PORT}});
+define('SMTP_USER',      '{{SMTP_USER}}');
+define('SMTP_PASS',      '{{SMTP_PASS}}');
+define('SMTP_FROM',      '{{SMTP_FROM}}');
+define('SMTP_FROM_NAME', '{{SMTP_FROM_NAME}}');
 
 // Entorno: TEST si el nombre de BD contiene '_TEST' (case-insensitive)
 define('IS_TEST_ENV', stripos(DB_NAME, '_TEST') !== false);

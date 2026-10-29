@@ -19,22 +19,49 @@
  *   backup/prod/v1.0.0/completo.sql
  */
 
-// Configuración de entornos
+// Configuración de entornos: credenciales DB_*_TEST / DB_*_PROD del .env local
+// (no en el código: este fichero está en git)
+function leerEnvLocal(string $fichero): array {
+    if (!is_file($fichero)) {  // is_readable falla en unidades de red de Windows
+        fwrite(STDERR, "ERROR: no se encuentra el .env local ($fichero)
+");
+        exit(1);
+    }
+    $vars = [];
+    foreach (file($fichero, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $linea) {
+        $linea = trim($linea);
+        if ($linea === '' || $linea[0] === '#' || !str_contains($linea, '=')) continue;
+        [$clave, $valor] = array_map('trim', explode('=', $linea, 2));
+        // Quitar comillas como hace dotenv ('literal' o "con escapes")
+        if (strlen($valor) >= 2 && ($valor[0] === "'" || $valor[0] === '"') && substr($valor, -1) === $valor[0]) {
+            $valor = $valor[0] === '"' ? stripcslashes(substr($valor, 1, -1)) : substr($valor, 1, -1);
+        }
+        $vars[$clave] = $valor;
+    }
+    return $vars;
+}
+
+$envLocal = leerEnvLocal(__DIR__ . '/../.env');
+$entornoDesdeEnv = function (string $suf, string $dir) use ($envLocal): array {
+    foreach (['HOST', 'NAME', 'USER', 'PASS'] as $k) {
+        if (empty($envLocal["DB_{$k}_{$suf}"])) {
+            fwrite(STDERR, "ERROR: falta DB_{$k}_{$suf} en el .env local
+");
+            exit(1);
+        }
+    }
+    return [
+        'host'       => $envLocal["DB_HOST_{$suf}"],
+        'database'   => $envLocal["DB_NAME_{$suf}"],
+        'user'       => $envLocal["DB_USER_{$suf}"],
+        'password'   => $envLocal["DB_PASS_{$suf}"],
+        'output_dir' => $dir,
+    ];
+};
+
 $environments = [
-    'test' => [
-        'host'       => 'PMYSQL168.dns-servicio.com',
-        'database'   => '10067489_fisiopilates_TEST',
-        'user'       => 'cppleal_fisiopilates',
-        'password'   => 'BWcq@khqY2UAct1o',
-        'output_dir' => __DIR__ . '/test/'
-    ],
-    'prod' => [
-        'host'       => 'PMYSQL117.dns-servicio.com',
-        'database'   => '9702349_fisio',
-        'user'       => 'cppleal-fisio',
-        'password'   => 'riRkvnuR9KuTed@s',
-        'output_dir' => __DIR__ . '/prod/'
-    ]
+    'test' => $entornoDesdeEnv('TEST', __DIR__ . '/test/'),
+    'prod' => $entornoDesdeEnv('PROD', __DIR__ . '/prod/'),
 ];
 
 // Obtener argumentos

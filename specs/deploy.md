@@ -55,7 +55,7 @@ node scripts/deploy.mjs --install
 
 **PHP Backend:**
 ```
-php/config.php                       → /api/config.php
+php/config.template.php + .env       → /api/config.php   (generado: scripts/config-servidor.mjs)
 php/contacto.php                     → /api/contacto.php
 php/lib/SmtpMailer.php               → /api/lib/SmtpMailer.php
 php/admin/index.php                  → /admin/index.php
@@ -147,7 +147,7 @@ node scripts/deploy.mjs --install
 ├── js/
 │   └── cookie-consent.js
 ├── api/
-│   ├── config.php          ← Auto-detecta entorno por hostname
+│   ├── config.php          ← Generado por entorno (solo sus credenciales)
 │   ├── contacto.php
 │   ├── lib/
 │   │   └── SmtpMailer.php
@@ -216,25 +216,32 @@ backup/test/backup_test_YYYY-MM-DD_HHmmss.sql
 
 ## Variables de entorno (`.env`)
 
-Credenciales sensibles en `.env` (nunca en git):
+El `.env` es **solo local** (nunca en git ni en ningún servidor). Reúne lo
+necesario para trabajar desde el PC, con sufijo de entorno:
 
 ```env
+# FTP (solo para desplegar)
 FTP_HOST_TEST=40749769.servicio-online.net
 FTP_USER_TEST=user-10067489
 FTP_PASS_TEST=...
 FTP_REMOTE_DIR_TEST=/httpdocs
+FTP_HOST_PROD=40546259.servicio-online.net
+FTP_USER_PROD=user-9702349
+FTP_PASS_PROD=...
+FTP_REMOTE_DIR_PROD=/fisiopilatesatlas.es
 
-SFTP_HOST_PROD=40546259.servicio-online.net
-SFTP_USER_PROD=user-9702349
-SFTP_REMOTE_DIR_PROD=/fisiopilatesatlas.es
-
-DB_HOST=...
-DB_NAME=...
-DB_USER=...
-DB_PASS=...
+# Lo que va al api/config.php de cada servidor (CLAVE_TEST / CLAVE_PROD)
+DB_HOST_TEST=...   DB_NAME_TEST=...   DB_USER_TEST=...   DB_PASS_TEST=...
+APP_SECRET_TEST=...  HCAPTCHA_SITE_KEY_TEST=...  HCAPTCHA_SECRET_TEST=...
+SMTP_HOST_TEST=...  SMTP_PORT_TEST=...  SMTP_USER_TEST=...  SMTP_PASS_TEST=...
+SMTP_FROM_TEST=...  SMTP_FROM_NAME_TEST=...
+# …y las mismas con _PROD
 ```
 
----
+- `scripts/config-servidor.mjs` genera el `api/config.php` de cada servidor con
+  las claves de su entorno (ver `specs/backend.md`).
+- `backup/backup-database.php` lee `DB_*_TEST` / `DB_*_PROD`.
+- `scripts/deploy.mjs` y `scripts/get-prod-images.mjs` leen `FTP_*`.
 
 ## Notas importantes de Hostalia
 
@@ -257,7 +264,7 @@ DB_PASS=...
 |-----------------|--------|
 | `node_modules/` | Dependencias |
 | `dist/` | Build output |
-| `.env` | Credenciales FTP y BD |
+| `.env` | Credenciales FTP, BD, SMTP y hCaptcha (solo local) |
 | `deploy/deploy-config.bat` | Credenciales FTP reales |
 | `backup/test/` | Volcados SQL de TEST |
 | `backup/prod/` | Volcados SQL de PROD |

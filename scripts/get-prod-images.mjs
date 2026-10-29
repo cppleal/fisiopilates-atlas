@@ -20,10 +20,10 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = join(__dirname, '..');
 
 const FTP_CONFIG = {
-  host: process.env.SFTP_HOST_PROD || '40546259.servicio-online.net',
+  host: process.env.FTP_HOST_PROD || '40546259.servicio-online.net',
   port: 21,
-  user: process.env.SFTP_USER_PROD || 'user-9702349',
-  password: process.env.SFTP_PASS_PROD || '$iMw3E1A7+C@9ba+',
+  user: process.env.FTP_USER_PROD || 'user-9702349',
+  password: process.env.FTP_PASS_PROD,
   secure: false,
 };
 

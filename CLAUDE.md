@@ -53,6 +53,7 @@ deploy/             → Scripts de deploy WinSCP
   get-prod-images.bat   → Descarga imágenes de PROD via FTP
 scripts/            → Scripts Node.js auxiliares
   deploy.mjs            → Deploy alternativo FTP (Node)
+  config-servidor.mjs   → Genera el api/config.php de cada servidor (solo sus credenciales)
 backup/             → Backups de base de datos
   backup-database.php   → Script PHP de backup
   backup.bat            → Wrapper Windows
@@ -82,6 +83,14 @@ VERSION             → Versión actual (formato X.Y.Z)
 - Metro: La Peseta · Carabanchel Alto
 - Bus: 35 · 47
 - Facebook: FisioterapiaYPilatesAtlas
+
+## Credenciales: cada servidor, solo las suyas
+
+- El `.env` es solo local, con sufijo `_TEST` / `_PROD` (FTP, BD, SMTP, hCaptcha, APP_SECRET).
+- El `api/config.php` de cada servidor **se genera**, no se copia:
+  `node scripts/config-servidor.mjs test|prod [--simular] [--forzar]` (también lo hace
+  `scripts/deploy.mjs` en el despliegue completo). Plantilla: `php/config.template.php`.
+- Ninguna contraseña en el código: `backup/backup-database.php` y los scripts leen el `.env`.
 
 ## Reglas de deploy
 
@@ -204,4 +213,4 @@ git push
 - Host: PMYSQL168.dns-servicio.com
 - BD: 10067489_fisiopilates_TEST
 - Usuario: cppleal_fisiopilates
-- Credenciales en `.env` y en `php/config.php` (vía getenv)
+- Credenciales en `.env` (`DB_*_TEST`); el `api/config.php` del servidor lo genera `scripts/config-servidor.mjs`
