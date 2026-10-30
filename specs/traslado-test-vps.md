@@ -1,7 +1,7 @@
 # Traslado de TEST al VPS
 
-**Estado**: 🟡 TEST montado y probado dentro del VPS (2026-10-30). Falta el registro DNS `test`, que crea César,
-para sacar el certificado y verificar desde fuera.
+**Estado**: 🟡 TEST en marcha en `https://test.fisiopilatesatlas.es` con certificado y verificación completa (2026-10-30).
+Falta la prueba de César: formulario con hCaptcha, correo recibido y entrada al panel.
 **Modelo**: Asociación Aérea (`specs/traslado-test-vps.md` de su repo). Mismo VPS y mismas piezas.
 
 ---
@@ -77,10 +77,10 @@ mismas que `DB_PASS_TEST` y `DB_ROOT_PASS_TEST` del `.env` local).
 - [x] `php backup/backup-database.php test` por el túnel; el túnel se cierra al terminar
 
 ### Fase 4 — DNS, certificado y pruebas desde fuera
-- [ ] César crea el registro A `test` → 187.77.170.2
-- [ ] `docker compose up -d` (sin `FA_TRAEFIK=false`): certificado de Let's Encrypt
-- [ ] `node scripts/verificar-test.mjs`
-- [ ] El widget de hCaptcha carga en `https://test.fisiopilatesatlas.es/contacto` sin error de dominio
+- [x] César crea el registro A `test` → 187.77.170.2 (Hostalia tardó más de una hora en publicarlo)
+- [x] `docker compose up -d` (sin `FA_TRAEFIK=false`): certificado de Let's Encrypt, válido hasta el 2027-01-28
+- [x] `node scripts/verificar-test.mjs`: 23/23
+- [x] El widget de hCaptcha carga en `https://test.fisiopilatesatlas.es/contacto` sin error de dominio (visto en Chrome, sin marcar la casilla)
 - [ ] César envía el formulario con hCaptcha, confirma la recepción del correo y entra en el panel
 
 ### Fase 5 — TEST viejo y seguimiento
@@ -111,3 +111,4 @@ Borrar un fichero del servidor de TEST: por SSH, en `/opt/fisiopilates-test/site
 | Fecha | Cambio |
 |-------|--------|
 | 2026-10-30 | Fases 0 a 3 hechas: TEST montado y probado dentro del VPS. A la espera del DNS |
+| 2026-10-30 | Fase 4: DNS, certificado, verificación 23/23 y widget de hCaptcha. Falta la prueba de César |
