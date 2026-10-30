@@ -198,6 +198,8 @@ ErrorDocument 404 /404.html
 </IfModule>
 ```
 
+> En Hostalia, nginx sirve los estáticos sin pasar por Apache: estas cabeceras solo llegan a las respuestas PHP.
+
 `npm run build` acaba con `scripts/check-csp.mjs`: si falla, el build falla y no se despliega (ver `arquitectura.md`, «Content Security Policy»).
 
 ---

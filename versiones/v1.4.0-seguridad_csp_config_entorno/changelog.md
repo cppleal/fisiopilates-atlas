@@ -53,3 +53,18 @@ al VPS, y sirve una versión anterior sin CSP. Por eso CSP, admin y CORS se prob
 ## Notas de actualización
 - `api/config.php` y `.htaccess` ya estaban en PROD desde el 2026-10-30, con la contraseña nueva de BD.
 - `php/config.php` local está borrado; si hace falta, el de cada servidor se regenera desde el `.env`.
+
+## Despliegue a PROD (2026-10-30)
+- `node scripts/deploy.mjs prod`, una conexión FTP. Commit `50104b7`.
+- Sumas SHA-256 descargadas de PROD: 43 de 43 ficheros iguales al build y a `php/`
+  (incluido el `api/config.php` generado).
+- Portada 200, precios 200 e igual al build, `/js/admin.js` 200, `/admin/` 403 por IP con su CSP.
+- Chrome en `fisiopilatesatlas.es/contacto`: CSP presente y hCaptcha visible y cargado.
+
+### Limitación detectada
+nginx sirve directamente los ficheros estáticos, sin pasar por Apache: las cabeceras del
+`.htaccess` (CSP frame-ancestors, X-Frame-Options, nosniff, Referrer-Policy) llegan a las respuestas
+de PHP, pero no al HTML estático. La CSP por huellas del `<meta>` sí se aplica; `frame-ancestors`
+no se puede poner en un `<meta>`, así que las páginas estáticas se pueden incrustar en otra web.
+Además, nginx responde 405 a OPTIONS: el CORS de `log-consent.php` se probó solo en local. No afecta
+al banner, que llama desde el mismo dominio.
