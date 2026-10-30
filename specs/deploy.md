@@ -32,6 +32,8 @@
 
 > **Nota:** El Joomla legacy fue eliminado el 2026-03-15. La web nueva Astro está activa en producción.
 > **Regla crítica:** NUNCA hacer deploy a PROD sin permiso explícito del usuario.
+> **TEST de Hostalia:** desde 2026-10-30 su FTP rechaza la contraseña (530) y no se va a cambiar porque
+> TEST pasa al VPS. Sirve una versión anterior a la 1.4.0; lo nuevo se prueba en local con `php -S` y la BD de TEST.
 
 ---
 
@@ -168,6 +170,11 @@ node scripts/deploy.mjs --install
 Options -Indexes
 DirectoryIndex index.html index.php
 
+# api/config.php nunca se sirve por HTTP (PHP lo carga con require)
+<Files "config.php">
+  Require all denied   # (con su alternativa Order/Deny para Apache antiguo)
+</Files>
+
 RewriteEngine On
 
 # Servir directamente si el fichero o directorio existe
@@ -197,17 +204,17 @@ ErrorDocument 404 /404.html
 
 ## Backup de base de datos
 
-Los backups se realizan mediante PHP CLI directamente contra la BD (sin mysqldump).
+Los backups se realizan mediante PHP CLI directamente contra la BD (sin mysqldump),
+con las credenciales `DB_*_TEST` / `DB_*_PROD` del `.env` local.
 
-```bash
-# Ejecutar script de backup (genera SQL en backup/prod/ y backup/test/)
-php backup/do-backup.php
+```bat
+backupackup.bat all vX.Y.Z
 ```
 
-Los ficheros se guardan como:
+Genera `estructura.sql` y `completo.sql` en:
 ```
-backup/prod/backup_prod_YYYY-MM-DD_HHmmss.sql
-backup/test/backup_test_YYYY-MM-DD_HHmmss.sql
+backup/test/vX.Y.Z/
+backup/prod/vX.Y.Z/
 ```
 
 > Las carpetas `backup/test/` y `backup/prod/` están en `.gitignore`.
@@ -276,7 +283,7 @@ SMTP_FROM_TEST=...  SMTP_FROM_NAME_TEST=...
 Ejecutar **solo cuando el usuario lo indique explícitamente**.
 
 ### Pasos
-1. Backup BD: `php backup/do-backup.php`
+1. Backup BD: `backupackup.bat all vX.Y.Z`
 2. Actualizar specs afectadas en `specs/`
 3. Crear `versiones/vX.Y.Z-desc/changelog.md`
 4. Actualizar fichero `VERSION`
@@ -300,3 +307,5 @@ Ejecutar **solo cuando el usuario lo indique explícitamente**.
 | `1.1.0` | 2026-03-07 | Sistema de backup BD, repositorio GitHub y procedimiento de versionado |
 | `1.2.0` | 2026-03-08 | Logo real en la cabecera |
 | `1.3.0` | 2026-03-15 | Protección admin por IP, primer deploy a producción, galería instalaciones |
+| `1.3.1` | 2026-03-15 | Limpieza de la BD de producción (tablas Joomla) |
+| `1.4.0` | 2026-10-30 | CSP por hashes, config.php por entorno, CORS limitado y aviso de precios |

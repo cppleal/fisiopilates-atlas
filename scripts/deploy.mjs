@@ -60,7 +60,6 @@ const env = isProd ? ENV.prod : ENV.test;
 if (isProd) {
   console.log('\n⛔  ATENCIÓN: Estás a punto de desplegar a PRODUCCIÓN.');
   console.log('   Esto sobreescribirá el sitio en vivo: https://fisiopilatesatlas.es');
-  console.log('   Actualmente hay una web JOOMLA en producción.');
   console.log('\n   Presiona Ctrl+C en los próximos 10 segundos para cancelar...\n');
   await new Promise(resolve => setTimeout(resolve, 10000));
 }

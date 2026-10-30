@@ -1,0 +1,50 @@
+Options -Indexes
+DirectoryIndex index.html index.php
+
+# api/config.php lleva credenciales: nunca se sirve por HTTP (PHP lo carga con require)
+<Files "config.php">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</Files>
+
+RewriteEngine On
+
+# Servir directamente si el fichero o directorio existe
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Clean URLs: /pilates → /pilates.html
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.+?)/?$ /$1.html [L]
+
+# Página 404 personalizada
+ErrorDocument 404 /404.html
+
+# Cabeceras de caché para assets estáticos
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType image/jpg "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/webp "access plus 1 month"
+  ExpiresByType text/css "access plus 1 week"
+  ExpiresByType application/javascript "access plus 1 week"
+</IfModule>
+
+# Cabeceras de seguridad (todas las respuestas: HTML de Astro, admin y api PHP)
+# La CSP con los hashes de los scripts va en un <meta> de cada página (Astro
+# experimental.csp; el admin PHP lleva el suyo). Aquí solo las directivas que el
+# <meta> no admite o que valen para todo: el navegador aplica las dos políticas a
+# la vez, así que esta no lleva script-src ni style-src para no chocar con la otra.
+<IfModule mod_headers.c>
+  Header always set Content-Security-Policy "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
