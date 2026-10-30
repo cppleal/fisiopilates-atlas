@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 
 REM =============================================
 REM DEPLOY FISIOPILATES ATLAS via WinSCP
-REM Uso: deploy-local.bat [test|prod] [archivo1] [archivo2] ...
+REM Uso: deploy-local.bat prod [archivo1] [archivo2] ...
 REM Si no se especifican archivos, sincroniza todo el dist/
 REM =============================================
 
@@ -14,25 +14,21 @@ REM Validar entorno
 set ENV=%1
 if "%ENV%"=="" (
     echo.
-    echo USO: deploy-local.bat [test^|prod] [archivo1] [archivo2] ...
+    echo USO: deploy-local.bat prod [archivo1] [archivo2] ...
     echo.
     echo Ejemplos:
-    echo   deploy-local.bat test                          - Sube todo dist/ a TEST
-    echo   deploy-local.bat test index.html               - Sube solo index.html
-    echo   deploy-local.bat test api/contacto.php         - Sube contacto.php
-    echo   deploy-local.bat test api/contacto.php admin/index.php
     echo   deploy-local.bat prod                          - REQUIERE confirmacion
+    echo   TEST esta en el VPS: node scripts/deploy.mjs
     echo.
     exit /b 1
 )
 
 REM Configurar segun entorno
 if /i "%ENV%"=="test" (
-    set FTP_HOST=%FTP_HOST_TEST%
-    set FTP_USER=%FTP_USER_TEST%
-    set FTP_PASS=%FTP_PASS_TEST%
-    set FTP_PATH=%FTP_PATH_TEST%
-    set ENV_NAME=TEST
+    echo.
+    echo TEST esta en el VPS desde 2026-10-30: usa node scripts/deploy.mjs
+    echo.
+    exit /b 1
 ) else if /i "%ENV%"=="prod" (
     echo.
     echo ========================================
@@ -111,7 +107,7 @@ echo Conectando a %FTP_HOST%...
 if %ERRORLEVEL% equ 0 (
     echo.
     echo === Deploy a %ENV_NAME% completado con exito ===
-    if /i "%ENV_NAME%"=="TEST" echo URL: https://%FTP_HOST%
+
 ) else (
     echo.
     echo ERROR: El deploy ha fallado.

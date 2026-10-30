@@ -110,7 +110,7 @@ try {
 
     $isTest = IS_TEST_ENV;
     $adminUrl = $isTest
-        ? 'https://40749769.servicio-online.net/admin/'
+        ? 'https://test.fisiopilatesatlas.es/admin/'
         : 'https://fisiopilatesatlas.es/admin/';
 
     $testBanner = $isTest

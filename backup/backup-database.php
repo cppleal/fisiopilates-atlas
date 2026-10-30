@@ -3,6 +3,9 @@
  * backup-database.php - Script de backup de base de datos
  * Proyecto: Fisiopilates Atlas
  *
+ * TEST está en el VPS: su BD se lee por un túnel SSH que este script abre y cierra
+ * (scripts/tunel-test.mjs, DB_HOST_TEST/DB_PORT_TEST del .env local).
+ *
  * Uso desde línea de comandos:
  *   php backup/backup-database.php test v1.0.0    # Backup de TEST para versión
  *   php backup/backup-database.php all v1.0.0     # Backup de ambos para versión
@@ -52,6 +55,7 @@ $entornoDesdeEnv = function (string $suf, string $dir) use ($envLocal): array {
     }
     return [
         'host'       => $envLocal["DB_HOST_{$suf}"],
+        'port'       => $envLocal["DB_PORT_{$suf}"] ?? '3306',
         'database'   => $envLocal["DB_NAME_{$suf}"],
         'user'       => $envLocal["DB_USER_{$suf}"],
         'password'   => $envLocal["DB_PASS_{$suf}"],
@@ -95,7 +99,7 @@ function backupDatabase($config, $envName, $version) {
     echo "Fecha: $timestamp\n\n";
 
     try {
-        $dsn = "mysql:host={$config['host']};dbname={$config['database']};charset=utf8mb4";
+        $dsn = "mysql:host={$config['host']};port={$config['port']};dbname={$config['database']};charset=utf8mb4";
         $pdo = new PDO($dsn, $config['user'], $config['password'], [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
@@ -196,6 +200,24 @@ function formatBytes($bytes) {
     return $bytes . ' bytes';
 }
 
+// Túnel a la BD de TEST del VPS: sigue abierto hasta cerrar el stdin del proceso node
+function abrirTunelTest() {
+    $tuberias = [];
+    $proceso = proc_open(['node', __DIR__ . '/../scripts/tunel-test.mjs', '--hasta-fin-stdin'],
+        [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => STDERR], $tuberias);
+    $linea = is_resource($proceso) ? fgets($tuberias[1]) : false;
+    if ($linea === false || !str_contains($linea, 'abierto')) {
+        return null;
+    }
+    return ['proceso' => $proceso, 'tuberias' => $tuberias];
+}
+
+function cerrarTunelTest(array $tunel) {
+    fclose($tunel['tuberias'][0]);
+    fclose($tunel['tuberias'][1]);
+    proc_close($tunel['proceso']);
+}
+
 // Ejecutar
 echo "============================================\n";
 echo "BACKUP DE BASE DE DATOS - Fisiopilates Atlas\n";
@@ -206,8 +228,15 @@ echo "Fecha: " . date('Y-m-d H:i:s') . "\n";
 $success = true;
 
 if ($env === 'all' || $env === 'test') {
-    if (!backupDatabase($environments['test'], 'TEST', $version)) {
+    $tunel = abrirTunelTest();
+    if ($tunel === null) {
+        echo "\nERROR: no se ha podido abrir el túnel a la BD de TEST\n";
         $success = false;
+    } else {
+        if (!backupDatabase($environments['test'], 'TEST', $version)) {
+            $success = false;
+        }
+        cerrarTunelTest($tunel);
     }
 }
 

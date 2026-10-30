@@ -13,3 +13,4 @@ Migración de Joomla a Astro 5 + Tailwind CSS 4. Generado: 2026-03-06.
 | [admin.md](admin.md) | Panel de administración y funcionalidades |
 | [cookies-rgpd.md](cookies-rgpd.md) | Sistema de consentimiento de cookies RGPD/LSSI-CE |
 | [deploy.md](deploy.md) | Entornos TEST/PROD, proceso de deploy, credenciales |
+| [traslado-test-vps.md](traslado-test-vps.md) | Traslado de TEST de Hostalia al VPS: decisiones, arquitectura y uso diario |

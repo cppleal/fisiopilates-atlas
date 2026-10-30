@@ -7,9 +7,9 @@ Migración de Joomla a web moderna con Astro 5 + Tailwind CSS 4.
 ## Stack técnico
 - **Frontend**: Astro 5 + Tailwind CSS 4 (genera HTML estático)
 - **Backend**: PHP 8 + MySQL (formulario contacto + panel admin)
-- **Deploy**: WinSCP via FTP (puerto 21) — igual que en Asociación Aérea
+- **Deploy**: TEST al VPS por SSH (`scripts/deploy.mjs`); PROD por FTP (puerto 21)
 - **Repositorio**: GitHub (privado) — cppleal/fisiopilates-atlas
-- **Nota**: Puerto SFTP (22) bloqueado en Hostalia → siempre FTP (21)
+- **Nota**: Puerto SFTP (22) bloqueado en Hostalia → en PROD siempre FTP (21)
 
 ## Paleta de colores
 - Primary: #1B6B6E (teal profundo)
@@ -19,13 +19,14 @@ Migración de Joomla a web moderna con Astro 5 + Tailwind CSS 4.
 
 ## Entornos
 
-### TEST (desarrollo activo)
-- **URL FTP**: 40749769.servicio-online.net (puerto 21)
-- **Usuario**: user-10067489
-- **BD**: PMYSQL168.dns-servicio.com — 10067489_fisiopilates_TEST
-- **Admin BD**: cppleal_fisiopilates
-- **Admin web**: https://40749769.servicio-online.net/admin/
+### TEST (VPS de Hostinger desde 2026-10-30, ver `specs/traslado-test-vps.md`)
+- **URL**: https://test.fisiopilatesatlas.es
+- **Servidor**: VPS 187.77.170.2, `/opt/fisiopilates-test`, contenedores `fa-test-web` y `fa-test-db`
+- **BD**: `fisiopilates_test`, solo en el loopback del VPS (127.0.0.1:33309); desde el PC, `node scripts/tunel-test.mjs`
+- **Admin web**: https://test.fisiopilatesatlas.es/admin/
 - **Credenciales**: en `.env`
+- **Regla anti-bloqueos**: el VPS está fuera. TEST se puede desplegar y comprobar sin limitaciones; PROD sigue en Hostalia.
+- El TEST viejo de Hostalia (40749769.servicio-online.net) está congelado: no se despliega ni se pide nada.
 
 ### PRODUCCIÓN (web nueva activa desde 2026-03-15)
 - **URL**: https://fisiopilatesatlas.es/
@@ -46,13 +47,17 @@ php/admin/          → Panel de administración
 php/lib/            → SmtpMailer.php
 public/             → Assets estáticos (imágenes, .htaccess)
 public/images/      → Imágenes del sitio
-deploy/             → Scripts de deploy WinSCP
-  deploy-local.bat      → Deploy principal (test/prod)
+deploy/             → Scripts de deploy
+  vps-test/             → Docker del TEST del VPS
+  deploy-local.bat      → Deploy WinSCP (solo prod)
   deploy-config.bat     → Credenciales reales (NO en git)
   deploy-config.template.bat → Plantilla (sí en git)
   get-prod-images.bat   → Descarga imágenes de PROD via FTP
 scripts/            → Scripts Node.js auxiliares
-  deploy.mjs            → Deploy alternativo FTP (Node)
+  deploy.mjs            → Deploy principal: TEST al VPS, PROD por FTP
+  vps.mjs               → Acceso SSH al VPS
+  tunel-test.mjs        → Túnel a la BD de TEST
+  verificar-test.mjs    → Comprueba TEST de punta a punta (nunca contra Hostalia)
   config-servidor.mjs   → Genera el api/config.php de cada servidor (solo sus credenciales)
 backup/             → Backups de base de datos
   backup-database.php   → Script PHP de backup
@@ -99,12 +104,13 @@ VERSION             → Versión actual (formato X.Y.Z)
 - `node scripts/deploy.mjs prod` ❌ → REQUIERE autorización explícita del usuario
 - NUNCA desplegar a PROD sin permiso del usuario
 
-### Proceso de deploy (WinSCP)
+### Proceso de deploy
 1. Cambios en `src/` o `php/`
 2. Build: `npm run build`
-3. Deploy TEST completo: `deploy\deploy-local.bat test`
-4. Deploy TEST parcial: `deploy\deploy-local.bat test index.html api/contacto.php`
-5. Deploy PROD (solo con permiso explícito): `deploy\deploy-local.bat prod`
+3. Deploy TEST completo: `node scripts/deploy.mjs`
+4. Deploy TEST parcial: `node scripts/deploy.mjs test index.html api/contacto.php`
+5. Comprobar TEST: `node scripts/verificar-test.mjs`
+6. Deploy PROD (solo con permiso explícito): `node scripts/deploy.mjs prod`
 
 ### Descargar imágenes de PROD
 ```bat
@@ -204,13 +210,12 @@ git push
 
 ## Base de datos
 
-### Tablas (entorno TEST)
+### Tablas
 - `contacto`: Mensajes del formulario (id, nombre, email, telefono, servicio, mensaje, ip, leido, created_at)
 - `admins`: Usuarios administradores (id, username, password, nombre, email, last_login, created_at)
 - `cookie_consent_logs`: Consentimientos RGPD
 
 ### Conexión TEST
-- Host: PMYSQL168.dns-servicio.com
-- BD: 10067489_fisiopilates_TEST
-- Usuario: cppleal_fisiopilates
+- Host: `db` desde la web; 127.0.0.1:33309 desde el PC, con `node scripts/tunel-test.mjs` abierto
+- BD y usuario: fisiopilates_test
 - Credenciales en `.env` (`DB_*_TEST`); el `api/config.php` del servidor lo genera `scripts/config-servidor.mjs`

@@ -10,7 +10,7 @@ header('Content-Type: application/json; charset=utf-8');
 $allowedOrigins = [
     'https://fisiopilatesatlas.es',
     'https://www.fisiopilatesatlas.es',
-    'https://40749769.servicio-online.net',
+    'https://test.fisiopilatesatlas.es',
 ];
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if (in_array($origin, $allowedOrigins, true)) {

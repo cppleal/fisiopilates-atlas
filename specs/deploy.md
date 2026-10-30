@@ -2,19 +2,17 @@
 
 ## Entornos
 
-### TEST (desarrollo activo)
+### TEST (VPS de Hostinger desde 2026-10-30, ver `traslado-test-vps.md`)
 
 | Parámetro | Valor |
 |-----------|-------|
-| URL | `https://40749769.servicio-online.net` |
-| FTP host | `40749769.servicio-online.net` |
-| FTP puerto | `21` (SFTP/22 bloqueado en Hostalia) |
-| FTP usuario | `user-10067489` |
-| FTP ruta remota | `/httpdocs` |
-| DB host | `PMYSQL168.dns-servicio.com` |
-| DB nombre | `10067489_fisiopilates_TEST` |
-| DB usuario | `cppleal_fisiopilates` |
-| Admin URL | `https://40749769.servicio-online.net/admin/` |
+| URL | `https://test.fisiopilatesatlas.es` |
+| Servidor | VPS 187.77.170.2, `/opt/fisiopilates-test` (SSH con `VPS_*` del `.env`) |
+| Contenedores | `fa-test-web` (php:8.4-apache), `fa-test-db` (mysql:8.4) |
+| DB host | `db` desde la web; `127.0.0.1:33309` desde el PC con `scripts/tunel-test.mjs` |
+| DB nombre | `fisiopilates_test` |
+| DB usuario | `fisiopilates_test` |
+| Admin URL | `https://test.fisiopilatesatlas.es/admin/` |
 
 ### PRODUCCIÓN (web nueva activa desde 2026-03-15)
 
@@ -32,22 +30,25 @@
 
 > **Nota:** El Joomla legacy fue eliminado el 2026-03-15. La web nueva Astro está activa en producción.
 > **Regla crítica:** NUNCA hacer deploy a PROD sin permiso explícito del usuario.
-> **TEST de Hostalia:** desde 2026-10-30 su FTP rechaza la contraseña (530) y no se va a cambiar porque
-> TEST pasa al VPS. Sirve una versión anterior a la 1.4.0; lo nuevo se prueba en local con `php -S` y la BD de TEST.
+> **TEST viejo de Hostalia** (`40749769.servicio-online.net`): congelado en una versión anterior a la 1.4.0. Su FTP
+> rechaza la contraseña (530) desde 2026-10-30 y ya no se despliega en él. Pendiente de borrar: lo decide César.
 
 ---
 
 ## Método principal de deploy: Node.js (`scripts/deploy.mjs`)
 
 ```bash
-# Deploy TEST completo (build + subida)
+# Deploy TEST completo (build + subida al VPS por SSH)
 npm run build && node scripts/deploy.mjs
+
+# Comprobar TEST de punta a punta (solo TEST: pide rutas sensibles; nunca contra Hostalia)
+node scripts/verificar-test.mjs
 
 # Deploy PROD (requiere permiso explícito — espera 10 segundos, Ctrl+C para cancelar)
 node scripts/deploy.mjs prod
 
-# Deploy con install.php (primer deploy en nuevo entorno)
-node scripts/deploy.mjs --install
+# Deploy PROD con install.php (primer deploy en nuevo entorno)
+node scripts/deploy.mjs prod --install
 ```
 
 ### Archivos que sube el script en deploy completo
@@ -74,14 +75,11 @@ php/install.php → /install.php   (solo con --install)
 
 ---
 
-## Método alternativo: WinSCP (.bat)
+## Método alternativo: WinSCP (.bat), solo PROD
 
 ```bat
-REM Deploy TEST completo
-deploy\deploy-local.bat test
-
-REM Deploy TEST parcial (archivos específicos desde dist/)
-deploy\deploy-local.bat test index.html api/contacto.php
+REM Deploy PROD parcial (archivos específicos desde dist/; pide confirmación)
+deploy\deploy-local.bat prod index.html
 ```
 
 > Nota: el método .bat solo sube archivos desde `dist/`. Para PHP hay que usar `deploy.mjs`.
@@ -98,7 +96,7 @@ npm run build
 node scripts/deploy.mjs
 
 # 3. Verificar en navegador
-# https://40749769.servicio-online.net
+# https://test.fisiopilatesatlas.es
 
 # 4. Con permiso del usuario → deploy a PROD
 node scripts/deploy.mjs prod
@@ -113,7 +111,7 @@ node scripts/deploy.mjs prod
 npm run build
 
 # 2. Deploy con install.php
-node scripts/deploy.mjs --install
+node scripts/deploy.mjs prod --install
 
 # 3. Ejecutar en el navegador:
 # https://dominio/install.php
@@ -132,7 +130,7 @@ node scripts/deploy.mjs --install
 ## Estructura remota del servidor
 
 ```
-/httpdocs/                  (raíz TEST) | /fisiopilatesatlas.es/ (raíz PROD)
+/opt/fisiopilates-test/site/ (raíz TEST) | /fisiopilatesatlas.es/ (raíz PROD)
 ├── index.html              ← Astro static
 ├── fisioterapia.html
 ├── pilates.html
@@ -149,7 +147,7 @@ node scripts/deploy.mjs --install
 ├── js/
 │   └── cookie-consent.js
 ├── api/
-│   ├── config.php          ← Generado por entorno (solo sus credenciales)
+│   ├── config.php          ← Generado por entorno (solo sus credenciales; en TEST, montado desde env/)
 │   ├── contacto.php
 │   ├── lib/
 │   │   └── SmtpMailer.php
@@ -199,6 +197,7 @@ ErrorDocument 404 /404.html
 ```
 
 > En Hostalia, nginx sirve los estáticos sin pasar por Apache: estas cabeceras solo llegan a las respuestas PHP.
+> En TEST (VPS) llegan a todo.
 
 `npm run build` acaba con `scripts/check-csp.mjs`: si falla, el build falla y no se despliega (ver `arquitectura.md`, «Content Security Policy»).
 
@@ -207,7 +206,8 @@ ErrorDocument 404 /404.html
 ## Backup de base de datos
 
 Los backups se realizan mediante PHP CLI directamente contra la BD (sin mysqldump),
-con las credenciales `DB_*_TEST` / `DB_*_PROD` del `.env` local.
+con las credenciales `DB_*_TEST` / `DB_*_PROD` del `.env` local. TEST va por un túnel SSH que el script abre y
+cierra solo (`scripts/tunel-test.mjs`).
 
 ```bat
 backupackup.bat all vX.Y.Z
@@ -230,27 +230,30 @@ necesario para trabajar desde el PC, con sufijo de entorno:
 
 ```env
 # FTP (solo para desplegar)
-FTP_HOST_TEST=40749769.servicio-online.net
-FTP_USER_TEST=user-10067489
-FTP_PASS_TEST=...
-FTP_REMOTE_DIR_TEST=/httpdocs
 FTP_HOST_PROD=40546259.servicio-online.net
 FTP_USER_PROD=user-9702349
 FTP_PASS_PROD=...
 FTP_REMOTE_DIR_PROD=/fisiopilatesatlas.es
 
 # Lo que va al api/config.php de cada servidor (CLAVE_TEST / CLAVE_PROD)
-DB_HOST_TEST=...   DB_NAME_TEST=...   DB_USER_TEST=...   DB_PASS_TEST=...
+DB_HOST_TEST=127.0.0.1  DB_PORT_TEST=33309  (el túnel; en el VPS, config-servidor.mjs pone «db»)
+DB_NAME_TEST=...   DB_USER_TEST=...   DB_PASS_TEST=...   DB_ROOT_PASS_TEST=...
 APP_SECRET_TEST=...  HCAPTCHA_SITE_KEY_TEST=...  HCAPTCHA_SECRET_TEST=...
 SMTP_HOST_TEST=...  SMTP_PORT_TEST=...  SMTP_USER_TEST=...  SMTP_PASS_TEST=...
 SMTP_FROM_TEST=...  SMTP_FROM_NAME_TEST=...
 # …y las mismas con _PROD
+
+# VPS de Hostinger (TEST)
+VPS_HOST=...  VPS_PORT=...  VPS_USER=...  VPS_HOSTKEY=...  VPS_PASS=...  VPS_DIR=/opt/fisiopilates-test
+
+# TEST viejo de Hostalia, solo para la vuelta atrás
+TEST_HOSTALIA_FTP_*  TEST_HOSTALIA_DB_*
 ```
 
 - `scripts/config-servidor.mjs` genera el `api/config.php` de cada servidor con
   las claves de su entorno (ver `specs/backend.md`).
 - `backup/backup-database.php` lee `DB_*_TEST` / `DB_*_PROD`.
-- `scripts/deploy.mjs` y `scripts/get-prod-images.mjs` leen `FTP_*`.
+- `scripts/deploy.mjs` lee `VPS_*` para TEST y `FTP_*` para PROD; `scripts/get-prod-images.mjs` lee `FTP_*`.
 
 ## Notas importantes de Hostalia
 
@@ -273,7 +276,7 @@ SMTP_FROM_TEST=...  SMTP_FROM_NAME_TEST=...
 |-----------------|--------|
 | `node_modules/` | Dependencias |
 | `dist/` | Build output |
-| `.env` | Credenciales FTP, BD, SMTP y hCaptcha (solo local) |
+| `.env` | Credenciales FTP, VPS, BD, SMTP y hCaptcha (solo local) |
 | `deploy/deploy-config.bat` | Credenciales FTP reales |
 | `backup/test/` | Volcados SQL de TEST |
 | `backup/prod/` | Volcados SQL de PROD |

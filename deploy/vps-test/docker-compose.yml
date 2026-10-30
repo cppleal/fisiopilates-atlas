@@ -1,0 +1,76 @@
+# ================================================================
+# Archivo: docker-compose.yml
+# Ruta: /deploy/vps-test/docker-compose.yml → /opt/fisiopilates-test/docker-compose.yml (VPS)
+# Descripción: Entorno TEST de Fisiopilates Atlas (test.fisiopilatesatlas.es) en el VPS
+# Última modificación: 2026-10-30
+#
+# Aislado: contenedores, red y volumen propios, enrutado por el Traefik existente.
+# PRODUCCIÓN sigue en Hostalia y no se toca. Ver specs/traslado-test-vps.md
+# Modelo: Asociación Aérea (/opt/asociacionaerea-test)
+#
+# Ficheros que NO están en Git (solo en el VPS):
+#   env/config.php → api/config.php de TEST (lo genera scripts/config-servidor.mjs test), root:www-data 640
+#   env/db.env     → MYSQL_ROOT_PASSWORD, MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD
+#
+# Arrancar sin pedir certificado (mientras se propaga el DNS):
+#   FA_TRAEFIK=false docker compose up -d
+# Vuelta atrás: docker compose down (el volumen de la BD se conserva)
+# ================================================================
+
+services:
+  web:
+    build: .
+    image: fisiopilates-test:local
+    container_name: fa-test-web
+    restart: unless-stopped
+    depends_on:
+      - db
+    volumes:
+      - ./site:/var/www/html
+      # El config.php vive fuera de site/ y entra solo de lectura
+      - ./env/config.php:/var/www/html/api/config.php:ro
+      # robots.txt propio de TEST (no indexar)
+      - ./robots.txt:/var/www/html/robots.txt:ro
+    networks:
+      - fisiopilates_test
+    labels:
+      - "traefik.enable=${FA_TRAEFIK:-true}"
+      - "traefik.docker.network=fisiopilates_test"
+      - "traefik.http.routers.fa-test.rule=Host(`test.fisiopilatesatlas.es`)"
+      - "traefik.http.routers.fa-test.entrypoints=websecure"
+      - "traefik.http.routers.fa-test.tls=true"
+      - "traefik.http.routers.fa-test.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.fa-test.middlewares=fa-test-noindex"
+      # TEST no se indexa: sin contraseña para poder probar de punta a punta
+      - "traefik.http.middlewares.fa-test-noindex.headers.customresponseheaders.X-Robots-Tag=noindex, nofollow, noarchive"
+      - "traefik.http.services.fa-test.loadbalancer.server.port=80"
+
+  db:
+    image: mysql:8.4
+    container_name: fa-test-db
+    restart: unless-stopped
+    env_file:
+      - ./env/db.env
+    environment:
+      TZ: Europe/Madrid
+    # Como la BD de Hostalia (MySQL 8.4): sin ONLY_FULL_GROUP_BY y utf8mb4
+    command:
+      - --sql-mode=IGNORE_SPACE,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    volumes:
+      - fa_test_mysql:/var/lib/mysql
+    networks:
+      - fisiopilates_test
+    # Solo en el loopback del VPS (nunca a Internet): para el túnel SSH de
+    # scripts/tunel-test.mjs, que usa desde el PC backup/backup-database.php
+    ports:
+      - "127.0.0.1:33309:3306"
+
+networks:
+  fisiopilates_test:
+    name: fisiopilates_test
+
+volumes:
+  fa_test_mysql:
+    name: fa_test_mysql

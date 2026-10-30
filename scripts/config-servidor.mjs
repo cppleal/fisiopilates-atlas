@@ -14,12 +14,17 @@
  *   node scripts/config-servidor.mjs test|prod --simular   baja el del servidor y compara, no sube nada
  *   node scripts/config-servidor.mjs test|prod             sube solo el config.php
  *   node scripts/config-servidor.mjs test|prod --forzar    sube aunque cambie la BD
- * scripts/deploy.mjs usa subirConfig() en su despliegue completo (misma conexión FTP).
+ * scripts/deploy.mjs usa subirConfig() en su despliegue completo (misma conexión).
+ *
+ * Destino:
+ *   TEST → VPS por SSH: VPS_DIR/env/config.php (root:www-data 640), fuera de site/ y
+ *          montado en el contenedor como api/config.php. DB_HOST es «db» (la red de
+ *          Docker); el DB_HOST_TEST del .env local es el del túnel.
+ *   PROD → Hostalia por FTP, una sola conexión por ejecución.
  *
  * Antes de subir guarda el config.php actual del servidor en ../backups/ (fuera
  * del repo) y se para si el nuevo apunta a otra BD, salvo --forzar. Después
- * comprueba la SHA-256 de lo subido. Una sola conexión FTP por ejecución. Nunca
- * imprime valores, solo nombres de constante.
+ * comprueba la SHA-256 de lo subido. Nunca imprime valores, solo nombres de constante.
  */
 
 import { Client } from 'basic-ftp';
@@ -30,6 +35,7 @@ import { join, relative, resolve } from 'path';
 import { Readable } from 'stream';
 import { fileURLToPath } from 'url';
 import { config } from 'dotenv';
+import { configVps, ssh } from './vps.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const BACKUPS = resolve(ROOT, '..', 'backups');
@@ -44,7 +50,7 @@ const CLAVES = [
 /** Si cambia alguna, el config.php nuevo apunta a otra BD: hace falta --forzar. */
 const CLAVES_BD = ['DB_HOST', 'DB_NAME', 'DB_USER'];
 /** Host con el que se evalúa el config.php del servidor (el antiguo elegía la BD por HTTP_HOST). */
-const HOST = { test: '40749769.servicio-online.net', prod: 'fisiopilatesatlas.es' };
+const HOST = { test: 'test.fisiopilatesatlas.es', prod: 'fisiopilatesatlas.es' };
 
 const sha256 = (texto) => createHash('sha256').update(texto).digest('hex');
 const phpCadena = (v) => `'${v.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
@@ -58,6 +64,8 @@ export function generarConfig(entorno) {
     if (!v) throw new Error(`falta ${k}_${SUF} en el .env local`);
     valores[k] = v;
   }
+  // En el VPS la web llega a MySQL por la red interna de Docker (servicio «db»)
+  if (entorno === 'test') valores.DB_HOST = 'db';
   if (!/^\d+$/.test(valores.SMTP_PORT)) throw new Error(`SMTP_PORT_${SUF} no es un número`);
   // IS_TEST_ENV sale del nombre de la BD: TEST debe llevar «_TEST» y PROD no
   if ((entorno === 'test') !== /_TEST/i.test(valores.DB_NAME)) {
@@ -93,28 +101,57 @@ function constantesDe(fichero, entorno) {
   return JSON.parse(execFileSync('php', ['-r', codigo], { env, encoding: 'utf8' }));
 }
 
-/**
- * Con una conexión FTP ya abierta: copia el api/config.php del servidor a
- * ../backups/, compara y (si no es simulación) sube el nuevo y comprueba su SHA-256.
- */
-export async function subirConfig(client, entorno, remoteDir, { simular = false, forzar = false } = {}) {
-  const nuevo = generarConfig(entorno);
+/** Destino en Hostalia, con una conexión FTP ya abierta. */
+export function destinoFtp(client, remoteDir) {
   const remoto = `${remoteDir}/api/config.php`;
+  const temporal = join(BACKUPS, '.config-bajado.php');
+  return {
+    nombre: remoto,
+    async leer() {
+      mkdirSync(BACKUPS, { recursive: true });
+      try {
+        await client.downloadTo(temporal, remoto);
+        return readFileSync(temporal, 'utf8');
+      } catch {
+        return null;
+      } finally {
+        writeFileSync(temporal, '');
+      }
+    },
+    escribir: (texto) => client.uploadFrom(Readable.from([texto]), remoto),
+  };
+}
+
+/** Destino en el VPS. Se escribe en el mismo fichero: el montaje de Docker sigue al inodo. */
+export function destinoVps() {
+  const { dir } = configVps();
+  const remoto = `${dir}/env/config.php`;
+  return {
+    nombre: `VPS:${remoto}`,
+    leer: async () => ssh(`cat ${remoto} 2>/dev/null || true`) || null,
+    escribir: async (texto) => {
+      ssh(`mkdir -p ${dir}/env && touch ${remoto} && chown root:33 ${remoto} && chmod 640 ${remoto} && cat > ${remoto}`, { input: texto });
+    },
+  };
+}
+
+/**
+ * Copia el config.php del servidor a ../backups/, compara y (si no es simulación)
+ * sube el nuevo y comprueba su SHA-256.
+ */
+export async function subirConfig(destino, entorno, { simular = false, forzar = false } = {}) {
+  const nuevo = generarConfig(entorno);
   const fecha = new Date().toLocaleDateString('sv-SE');  // AAAA-MM-DD en hora local
   mkdirSync(BACKUPS, { recursive: true });
   const copia = join(BACKUPS, `config-servidor-${entorno}_${fecha}.php`);
   const temporal = join(BACKUPS, `.config-nuevo-${entorno}.php`);
 
-  let previo = null;
-  try {
-    await client.downloadTo(copia, remoto);
-    previo = readFileSync(copia, 'utf8');
+  const previo = await destino.leer();
+  if (previo === null) {
+    console.log('   No había config.php en el servidor: se crea.');
+  } else {
+    writeFileSync(copia, previo, { mode: 0o600 });
     console.log(`   Copia del config.php del servidor: ${relative(ROOT, copia)}`);
-  } catch {
-    console.log('   No había api/config.php en el servidor: se crea.');
-  }
-
-  if (previo !== null) {
     writeFileSync(temporal, nuevo, { mode: 0o600 });
     let antes, despues;
     try {
@@ -135,12 +172,10 @@ export async function subirConfig(client, entorno, remoteDir, { simular = false,
   }
   if (simular) return;
 
-  await client.uploadFrom(Readable.from([nuevo]), remoto);
-  await client.downloadTo(temporal, remoto);
-  const subido = readFileSync(temporal, 'utf8');
-  writeFileSync(temporal, '');
-  if (sha256(subido) !== sha256(nuevo)) throw new Error('la SHA-256 del config.php subido no coincide');
-  console.log(`   Subido ${remoto} (${entorno.toUpperCase()}, SHA-256 comprobada)`);
+  await destino.escribir(nuevo);
+  const subido = await destino.leer();
+  if (subido === null || sha256(subido) !== sha256(nuevo)) throw new Error('la SHA-256 del config.php subido no coincide');
+  console.log(`   Subido ${destino.nombre} (${entorno.toUpperCase()}, SHA-256 comprobada)`);
 }
 
 // ── Uso directo ──────────────────────────────────────────────────────────────
@@ -151,8 +186,16 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     process.exit(1);
   }
   const SUF = entorno.toUpperCase();
+  const opciones = {
+    simular: process.argv.includes('--simular'),
+    forzar: process.argv.includes('--forzar'),
+  };
   const client = new Client();
   try {
+    if (entorno === 'test') {
+      await subirConfig(destinoVps(), entorno, opciones);
+      process.exit(0);
+    }
     await client.access({
       host: process.env[`FTP_HOST_${SUF}`],
       user: process.env[`FTP_USER_${SUF}`],
@@ -161,10 +204,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       port: 21,
     });
     console.log(`Conectado a ${process.env[`FTP_HOST_${SUF}`]} (${SUF})`);
-    await subirConfig(client, entorno, process.env[`FTP_REMOTE_DIR_${SUF}`], {
-      simular: process.argv.includes('--simular'),
-      forzar: process.argv.includes('--forzar'),
-    });
+    await subirConfig(destinoFtp(client, process.env[`FTP_REMOTE_DIR_${SUF}`]), entorno, opciones);
   } catch (err) {
     console.error('ERROR:', err.message);
     process.exitCode = 1;

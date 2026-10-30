@@ -4,7 +4,7 @@
 
 | Campo | Valor |
 |-------|-------|
-| URL TEST | `https://40749769.servicio-online.net/admin/` |
+| URL TEST | `https://test.fisiopilatesatlas.es/admin/` |
 | URL PROD | `https://fisiopilatesatlas.es/admin/` |
 | Usuario | `admin` |
 | Contraseña por defecto | `atlas2025` (cambiar tras primer acceso) |

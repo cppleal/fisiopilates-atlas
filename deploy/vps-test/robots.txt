@@ -1,0 +1,3 @@
+# robots.txt de TEST (test.fisiopilatesatlas.es): no indexar nada
+User-agent: *
+Disallow: /

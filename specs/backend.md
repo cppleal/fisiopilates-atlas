@@ -20,8 +20,11 @@ node scripts/config-servidor.mjs prod             # PROD: solo con permiso de C�
 Antes de subir guarda el del servidor en `../backups/` (fuera del repo), se para
 si el nuevo apunta a otra BD (salvo `--forzar`) y comprueba la SHA-256 de lo subido.
 
-> `public/.htaccess` niega `config.php` por HTTP. Esa regla se comprueba leyéndola o en
-> local, nunca pidiendo la ruta al servidor (Hostalia lo toma por una auditoría).
+> `public/.htaccess` niega `config.php` por HTTP. Esa regla se comprueba en TEST (VPS, 403 en
+> `scripts/verificar-test.mjs`), nunca pidiendo la ruta a PROD (Hostalia lo toma por una auditoría).
+>
+> En TEST el fichero vive en `/opt/fisiopilates-test/env/config.php`, fuera de `site/`, y se monta
+> de solo lectura como `api/config.php`, con `DB_HOST=db`.
 >
 > Hasta 2026-10-30 `php/config.php` llevaba las BD de TEST y PROD y elegía por
 > `HTTP_HOST`. Ese fichero local (fuera de git) ya no se sube.
@@ -30,9 +33,9 @@ si el nuevo apunta a otra BD (salvo `--forzar`) y comprueba la SHA-256 de lo sub
 
 | Constante | TEST | PROD | Descripción |
 |-----------|------|------|-------------|
-| `DB_HOST` | `PMYSQL168.dns-servicio.com` | `PMYSQL117.dns-servicio.com` | Host MySQL |
-| `DB_NAME` | `10067489_fisiopilates_TEST` | `9702349_fisio` | Nombre BD |
-| `DB_USER` | `cppleal_fisiopilates` | `cppleal-fisio` | Usuario BD |
+| `DB_HOST` | `db` (red de Docker del VPS) | `PMYSQL117.dns-servicio.com` | Host MySQL |
+| `DB_NAME` | `fisiopilates_test` | `9702349_fisio` | Nombre BD |
+| `DB_USER` | `fisiopilates_test` | `cppleal-fisio` | Usuario BD |
 | `APP_SECRET` | en `.env` | en `.env` (distinta de TEST) | Reservada: hoy no la usa ningún PHP |
 | `HCAPTCHA_SITE_KEY` | `1d9426de-...` | igual | Clave pública hCaptcha |
 | `IS_TEST_ENV` | `true` | `false` | Sale de `DB_NAME` (contiene `_TEST`) |
@@ -76,7 +79,7 @@ si el nuevo apunta a otra BD (salvo `--forzar`) y comprueba la SHA-256 de lo sub
 **Archivo:** `php/cookies/log-consent.php`
 **URL desplegada:** `/api/cookies/log-consent.php`
 **Método:** `POST`
-**CORS:** solo responde `Access-Control-Allow-Origin` a los orígenes propios (`https://fisiopilatesatlas.es`, `https://www.fisiopilatesatlas.es` y TEST `https://40749769.servicio-online.net`), sin `*` ni `Allow-Credentials`; el banner lo llama same-origin.
+**CORS:** solo responde `Access-Control-Allow-Origin` a los orígenes propios (`https://fisiopilatesatlas.es`, `https://www.fisiopilatesatlas.es` y TEST `https://test.fisiopilatesatlas.es`), sin `*` ni `Allow-Credentials`; el banner lo llama same-origin.
 
 ### Payload JSON esperado
 ```json

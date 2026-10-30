@@ -8,8 +8,8 @@
 | CSS | Tailwind CSS | 4.x |
 | Backend | PHP | 8.x |
 | Base de datos | MySQL | 5.7+ / 8.x |
-| Servidor web | Apache + mod_rewrite | Hostalia |
-| Deploy | FTP (basic-ftp Node.js / WinSCP) | Puerto 21 |
+| Servidor web | Apache + mod_rewrite | PROD en Hostalia; TEST en Docker en el VPS (`traslado-test-vps.md`) |
+| Deploy | PROD: FTP (basic-ftp Node.js / WinSCP), puerto 21. TEST: SSH al VPS | |
 
 > El sitio genera HTML estático en `dist/`. PHP solo existe para el formulario de contacto, el panel admin y el registro de cookies.
 
@@ -53,9 +53,12 @@ new_fisio/
 │       └── admin.js        → Acciones del panel admin (sustituye a los onclick=)
 ├── images/                 → Imágenes originales de alta calidad (no en git)
 ├── scripts/
-│   ├── deploy.mjs          → Deploy FTP (Node.js) — método principal
+│   ├── deploy.mjs          → Deploy (Node.js) — método principal: TEST al VPS, PROD por FTP
+│   ├── vps.mjs             → Acceso SSH al VPS (plink)
+│   ├── tunel-test.mjs      → Túnel a la BD de TEST
+│   ├── verificar-test.mjs  → Comprueba TEST de punta a punta (nunca contra Hostalia)
 │   └── check-csp.mjs       → Comprueba la CSP de dist/ y del admin (va dentro de npm run build)
-├── deploy/                 → Scripts WinSCP (.bat) — método alternativo
+├── deploy/                 → Scripts WinSCP (.bat, solo PROD) y deploy/vps-test/ (Docker de TEST)
 │   ├── deploy-local.bat
 │   ├── deploy-config.bat   → Credenciales reales (no en git)
 │   └── get-prod-images.bat
