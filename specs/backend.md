@@ -20,6 +20,9 @@ node scripts/config-servidor.mjs prod             # PROD: solo con permiso de C�
 Antes de subir guarda el del servidor en `../backups/` (fuera del repo), se para
 si el nuevo apunta a otra BD (salvo `--forzar`) y comprueba la SHA-256 de lo subido.
 
+> `public/.htaccess` niega `config.php` por HTTP. Esa regla se comprueba leyéndola o en
+> local, nunca pidiendo la ruta al servidor (Hostalia lo toma por una auditoría).
+>
 > Hasta 2026-10-30 `php/config.php` llevaba las BD de TEST y PROD y elegía por
 > `HTTP_HOST`. Ese fichero local (fuera de git) ya no se sube.
 
@@ -30,7 +33,7 @@ si el nuevo apunta a otra BD (salvo `--forzar`) y comprueba la SHA-256 de lo sub
 | `DB_HOST` | `PMYSQL168.dns-servicio.com` | `PMYSQL117.dns-servicio.com` | Host MySQL |
 | `DB_NAME` | `10067489_fisiopilates_TEST` | `9702349_fisio` | Nombre BD |
 | `DB_USER` | `cppleal_fisiopilates` | `cppleal-fisio` | Usuario BD |
-| `APP_SECRET` | `atlas_2025_s3cr3t_k3y_*` | igual | Clave sesiones admin |
+| `APP_SECRET` | en `.env` | en `.env` (distinta de TEST) | Reservada: hoy no la usa ningún PHP |
 | `HCAPTCHA_SITE_KEY` | `1d9426de-...` | igual | Clave pública hCaptcha |
 | `IS_TEST_ENV` | `true` | `false` | Sale de `DB_NAME` (contiene `_TEST`) |
 | `CONTACT_TO` | `cppleal@gmail.com` | `fisiopilates.atlas@gmail.com` | Destinatario contacto |
@@ -41,7 +44,7 @@ si el nuevo apunta a otra BD (salvo `--forzar`) y comprueba la SHA-256 de lo sub
 ### Función `getDB(): PDO`
 - Singleton PDO con `ERRMODE_EXCEPTION`
 - Charset `utf8mb4`
-- No expone errores en producción (solo con `?debug`)
+- No expone errores de conexión al visitante: van a `error_log`
 
 ---
 

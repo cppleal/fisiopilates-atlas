@@ -1,6 +1,17 @@
 Options -Indexes
 DirectoryIndex index.html index.php
 
+# api/config.php lleva credenciales: nunca se sirve por HTTP (PHP lo carga con require)
+<Files "config.php">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</Files>
+
 RewriteEngine On
 
 # Servir directamente si el fichero o directorio existe

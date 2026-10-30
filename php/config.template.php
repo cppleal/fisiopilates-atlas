@@ -57,9 +57,6 @@ function getDB(): PDO {
             ]);
         } catch (PDOException $e) {
             error_log('Error de conexión DB: ' . $e->getMessage());
-            if (isset($_GET['debug'])) {
-                die('Error DB: ' . $e->getMessage());
-            }
             die('Error de conexión a la base de datos.');
         }
     }
